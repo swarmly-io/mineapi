@@ -53,10 +53,12 @@ bot.on("chat", async (username, message) => {
 
     bot.chat(`I found ${blocks.length} ${name} blocks in ${time} ms`);
 
+    const { x: botX, y: botY, z: botZ } = bot.spawnPoint
     const { x, y, z } = blocks[0]
 
     bot.pathfinder.setMovements(defaultMove)
     bot.pathfinder.setGoal(new GoalNear(x, y, z, RANGE_GOAL))
-
+    // return to spawn point
+    bot.pathfinder.setGoal(new GoalNear(botX, botY, botZ, RANGE_GOAL))
   }
 });
