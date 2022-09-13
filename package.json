@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "package": "pkg ."
+    "package": "pkg .",
+    "build": "tsc --build",
+    "clean": "tsc --build --clean"
   },
   "author": "",
   "license": "ISC",

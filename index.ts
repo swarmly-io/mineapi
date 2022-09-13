@@ -1,15 +1,19 @@
-import { Attributes } from './attributes.js'
+import { Attributes } from './attributes'
 import mineflayer from "mineflayer"
 import mcd from 'minecraft-data'
 let mcData = mcd('1.17.1')
 import readline from 'readline'
 import fs from 'fs'
 
-const port = process.argv[2] || 54393
+const host = process.argv[2] || '127.0.0.1'
+const port = process.argv[3] || 25565
+const name = process.argv[4] || 'McBot'
 
 const bot = mineflayer.createBot({
  // host: process.argv[0],
-  port: port,
+  host: host,
+  port: port as number,
+  username: name,
 //  username: process.argv[4] ? process.argv[4] : "finder",
 //  password: process.argv[5],
 });
@@ -31,17 +35,17 @@ async function read() {
               // todo add canDo([collect_wood, craft_table, make_axe, craft_pickaxe]) -> evaluates chain and returns true | false 
               await attributes.findAndCollectResource(mcData.blocksByName.birch_wood.id, 50)
               await attributes.craft_table()
-              await attributes.crafting_pickaxe()
+              await attributes.craft_pickaxe()
           }
-          if (cmd == "collect") {
-              await bot.collect()
-          }
-          if (cmd == "empty") {
-              await bot.empty()
-          }
-          if (cmd == "nudge") {
-              await bot.nudge()
-          }
+        //   if (cmd == "collect") {
+        //       await bot.collect()
+        //   }
+        //   if (cmd == "empty") {
+        //       await bot.empty()
+        //   }
+        //   if (cmd == "nudge") {
+        //       await bot.nudge()
+        //   }
           reader.close()
           read()
       })
