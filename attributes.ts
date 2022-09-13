@@ -2,7 +2,8 @@ import { IndexedData } from 'minecraft-data'
 import { Bot } from 'mineflayer'
 import  collectBlock from 'mineflayer-collectblock'
 import { pathfinder } from 'mineflayer-pathfinder'
-import { CraftAction, FindAndCollectAction } from './action'
+import { Action, CraftAction, FindAndCollectAction } from './action'
+import { mergeWithConsequences, observe } from './observer'
 
 const DEFAULT_ALLOWED_DISTANCE = 16
 export class Attributes {
@@ -17,7 +18,26 @@ export class Attributes {
         this.bot.loadPlugin(pathfinder)
     }
 
-    async findAndCollectResource(blockId: number, amountToMine: number, allowedMaxDistance = DEFAULT_ALLOWED_DISTANCE) {
+    async canDo(actions: Action[]): Promise<boolean | number> { // Returns true when all actions are possible, otherwise the index of the failing action
+
+        let observation = await observe(this.bot)
+
+        for (let i = 0; i < actions.length; i++) {
+            let action = actions[i]           
+
+            let result = await action.possible(observation)
+            if (!result.success) {
+                return i
+            }
+
+            //merge the consequences of previous action with the consequences
+            observation = mergeWithConsequences(observation, result)
+        }
+
+        return true
+    }
+
+    findAndCollectResource(blockId: number, amountToMine: number, allowedMaxDistance = DEFAULT_ALLOWED_DISTANCE) {
         return new FindAndCollectAction(this.bot, this.mcData, blockId, amountToMine, allowedMaxDistance)
     }
 

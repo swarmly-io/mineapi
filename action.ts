@@ -7,6 +7,7 @@ import { IndexedData } from "minecraft-data"
 import { Block } from 'prismarine-block'
 import { RecipeNotFoundError } from "./errors/RecipeNotFoundError"
 import { parseRecipe } from "./helpers/RecipeHelper"
+import { Consequences, Observation } from "./types"
 
 const DEFAULT_ALLOWED_DISTANCE = 16
 
@@ -23,7 +24,7 @@ export class Action {
         throw new Error('Cannot call do() on empty action')
     }
 
-    async possible (observation) : Promise<boolean> {
+    async possible (observation: Observation) : Promise<Consequences> {
         throw new Error('Cannot call possible() on empty action')
     }
 }
@@ -60,36 +61,37 @@ export class CraftAction extends Action {
         await this.bot.craft(recipes[0], Math.ceil(this.count / recipes[0].result.count), craftingTable ?? undefined)
     }
 
-    async possible(observation) {
+    async possible(observation: Observation): Promise<Consequences> {
         let recipes = this.mcData.recipes[this.itemId]
         let craftingTable = findBlock(this.bot, 
                                       this.mcData.blocksByName.crafting_table.id, 
                                       this.allowWalking ? this.allowedMaxDistance! : 6.0, 
                                       observation.position)
 
-        let foundRecipe = false
-        for (let recipe of recipes.map(x => parseRecipe(x))) { // find craftable recipe
-
+        let recipe = recipes.map(x => parseRecipe(x)).find(x => {
             try{
-                if (recipe.requiresTable && craftingTable === null) //
-                    continue
+                if (x.requiresTable && craftingTable === null) //
+                    return false
 
-                for (const [id, count] of Object.entries(recipe.ingredients)) {
+                for (const [id, count] of Object.entries(x.ingredients)) {
                     assertHas(observation, count as number, id)
                 }
             } catch (e) {
-                if (e instanceof NotEnoughItemsError) continue
+                if (e instanceof NotEnoughItemsError) return false
                 else throw e 
             }
+            return true
+        })
 
-            foundRecipe = true
-            break
+
+        if (recipe === undefined)
+            return { success: false }
+
+        return {
+            success: true,
+            inventory: Object.entries(recipe.ingredients)
+                             .reduce((p, [k, v]) => (p[k] = -(v as number), p), {}) // negate ingredients values
         }
-
-        if (!foundRecipe)
-            return false
-
-        return true
     }
 }
 
@@ -132,13 +134,17 @@ export class FindAndCollectAction extends Action {
         return this.bot.inventory.count(this.blockId, null) - blocksBefore
     }
 
-    async possible (observation) {
+    async possible (observation: Observation): Promise<Consequences> {
         //TODO: does not check yet whether the bot has the tools to mine the blocks
         const blocks = findBlocks(this.bot, this.blockId, this.allowedMaxDistance, this.amountToCollect, observation.position)
         if (blocks.length < this.amountToCollect) {
-            return false
+            return { success: false }
         }
-        return true
+        let inv: Record<number | string, number> = {}
+        inv[this.blockId] = this.amountToCollect
+        return {
+            success: true,
+            inventory: inv
+        }
     }
-
 }

@@ -18,7 +18,12 @@ export interface Observation {
     },
     closeEntities: Entity[],
     inventory: {
-        items: Record<number, number>,
+        items: Record<number | string, number>,
         emptySlots: number
     }
+}
+
+export interface Consequences {
+    success: boolean,
+    inventory?: Record<number | string, number>,
 }

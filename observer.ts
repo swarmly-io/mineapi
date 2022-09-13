@@ -1,6 +1,6 @@
 import { Bot } from "mineflayer"
 import { groupBy } from "underscore"
-import { Observation } from "./types"
+import { Consequences, Observation } from "./types"
 
 const EntityMaxDistanceSquared = Math.pow(32, 2) 
 
@@ -12,7 +12,6 @@ const observeInventory = function(bot: Bot): Record<number, number> {
 }
 
 export const observe = async function(bot: Bot): Promise<Observation> {
-
     return {
         position: bot.entity.position.clone(),
         status: {
@@ -33,4 +32,15 @@ export const observe = async function(bot: Bot): Promise<Observation> {
             emptySlots: bot.inventory.emptySlotCount()
         }
     }
+}
+
+export const mergeWithConsequences = (observation: Observation, consequences: Consequences): Observation => {
+    let merged = { ...observation }
+    
+    if (consequences.inventory !== undefined) {
+        merged.inventory = Object.entries(consequences.inventory!)
+                                 .reduce((p, [k, v]) => (p[k] !== undefined ? p[k] += v : p[k] = v, p), observation.inventory)
+    }
+
+    return merged
 }

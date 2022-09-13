@@ -26,6 +26,18 @@ async function read() {
       output: process.stdout
     })
     reader.question(`please input a command \n`, async cmd => {
+        if (cmd == 'chain possible') {
+            let chain = [attributes.findAndCollectResource(mcData.blocksByName.oak_wood.id, 3), 
+                         attributes.craft(mcData.blocksByName.oak_planks.id, 12, false),
+                         attributes.craft_axe()]
+            attributes.canDo(chain).then(x => {
+                if (typeof x === 'number') {
+                    console.log("Chain not possible: Failing at task " + x)
+                } else {
+                    console.log("Chain possible")
+                }
+            })
+        }
           if (cmd == "make an axe") {
               // todo, should be able to find any type of wood
               // todo, should have some try do command
