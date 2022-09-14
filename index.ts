@@ -1,8 +1,8 @@
-import { Attributes } from './attributes.js'
+import { Attributes } from './Attributes.js'
 import mineflayer from "mineflayer"
 import mcd from 'minecraft-data'
 import readline from 'readline'
-import { observe } from './observer.js'
+import { observe } from './Observer.js'
 
 let mcData = mcd('1.17.1')
 

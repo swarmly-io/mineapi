@@ -2,9 +2,9 @@ import { IndexedData } from 'minecraft-data'
 import { Bot } from 'mineflayer'
 import  collectBlock from 'mineflayer-collectblock'
 import { pathfinder } from 'mineflayer-pathfinder'
-import { Action, CraftAction, FindAndCollectAction } from './action.js'
+import { Action, CraftAction, FindAndCollectAction } from './Action.js'
 import { NotPossibleError } from './errors/NotPossibleError.js'
-import { mergeWithConsequences, observe } from './observer.js'
+import { mergeWithConsequences, observe } from './Observer.js'
 
 const DEFAULT_ALLOWED_DISTANCE = 16
 export class Attributes {
