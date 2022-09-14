@@ -1,13 +1,13 @@
-import { assertHas } from "./helpers/InventoryHelper"
-import { NotEnoughItemsError } from "./errors/NotEnoughItemsError"
-import { findBlock, findBlocks } from "./helpers/EnvironmentHelper"
-import { BlockNotFoundError } from "./errors/BlockNotFoundError"
+import { assertHas } from "./helpers/InventoryHelper.js"
+import { NotEnoughItemsError } from "./errors/NotEnoughItemsError.js"
+import { findBlock, findBlocks } from "./helpers/EnvironmentHelper.js"
+import { BlockNotFoundError } from "./errors/BlockNotFoundError.js"
 import { Bot } from "mineflayer"
 import { IndexedData } from "minecraft-data"
 import { Block } from 'prismarine-block'
-import { RecipeNotFoundError } from "./errors/RecipeNotFoundError"
-import { parseRecipe } from "./helpers/RecipeHelper"
-import { Consequences, Observation } from "./types"
+import { RecipeNotFoundError } from "./errors/RecipeNotFoundError.js"
+import { parseRecipe } from "./helpers/RecipeHelper.js"
+import { Consequences, Observation } from "./types.js"
 
 const DEFAULT_ALLOWED_DISTANCE = 16
 
@@ -47,7 +47,7 @@ export class CraftAction extends Action {
 
     
 
-    async do() {
+    async do(): Promise<any> {
         let craftingTable = findBlock(this.bot, 
             this.mcData.blocksByName.crafting_table.id, 
             this.allowWalking ? this.allowedMaxDistance! : 6.0, 
@@ -73,8 +73,9 @@ export class CraftAction extends Action {
                 if (x.requiresTable && craftingTable === null) //
                     return false
 
+                let c = Math.ceil(this.count / x.resultCount)
                 for (const [id, count] of Object.entries(x.ingredients)) {
-                    assertHas(observation, count as number, id)
+                    assertHas(observation, c * (count as number), id)
                 }
             } catch (e) {
                 if (e instanceof NotEnoughItemsError) return false
@@ -87,10 +88,13 @@ export class CraftAction extends Action {
         if (recipe === undefined)
             return { success: false }
 
+        let c = Math.ceil(this.count / recipe.resultCount)
+        let inv = Object.fromEntries(Object.entries(recipe.ingredients).map(([key, value]) => [key, -c * (value as number)]))
+        inv[this.itemId] = c * recipe.resultCount
+
         return {
             success: true,
-            inventory: Object.entries(recipe.ingredients)
-                             .reduce((p, [k, v]) => (p[k] = -(v as number), p), {}) // negate ingredients values
+            inventory: inv
         }
     }
 }
@@ -112,8 +116,9 @@ export class FindAndCollectAction extends Action {
         this.allowedMaxDistance = allowedMaxDistance
     }
 
-    async do() { // TODO: Do we need metadata?
-        let blocksBefore = this.bot.inventory.count(this.blockId, null)
+    async do(): Promise<Record<number, number>> { // TODO: Do we need metadata?        
+        let blockType = this.mcData.blocks[this.blockId]
+        let blocksBefore: Record<number, number> = Object.fromEntries(blockType.drops.map(x => [x, this.bot.inventory.count(x as number, null)]))
 
         const blocks = findBlocks(this.bot, this.blockId, this.allowedMaxDistance, this.amountToCollect)
 
@@ -131,17 +136,33 @@ export class FindAndCollectAction extends Action {
         //@ts-ignore  ts doesnt know about mineflayer plugins
         await this.bot.collectBlock.collect(targets)
 
-        return this.bot.inventory.count(this.blockId, null) - blocksBefore
+        let blocksNow: Record<number, number> = Object.fromEntries(blockType.drops.map(x => [x, this.bot.inventory.count(x as number, null)]))
+
+        return Object.fromEntries(Object.entries(blocksNow).map(([key, count]) => [key, count - blocksBefore[key]]))
     }
 
     async possible (observation: Observation): Promise<Consequences> {
-        //TODO: does not check yet whether the bot has the tools to mine the blocks
+        let blockType = this.mcData.blocks[this.blockId]
+
+        // Now checking for harvest tools
+        
+        if (blockType.harvestTools !== undefined) {
+            try{
+                assertHas(observation, 1, (i => Object.keys(blockType.harvestTools!).includes(i as string)))
+            } catch (e) {
+                if (e instanceof NotEnoughItemsError){
+                    return { success: false }
+                } else throw e
+            }
+        }
+
         const blocks = findBlocks(this.bot, this.blockId, this.allowedMaxDistance, this.amountToCollect, observation.position)
+        
         if (blocks.length < this.amountToCollect) {
             return { success: false }
         }
-        let inv: Record<number | string, number> = {}
-        inv[this.blockId] = this.amountToCollect
+
+        let inv = Object.fromEntries(blockType.drops.map(x => [x, this.amountToCollect]))
         return {
             success: true,
             inventory: inv

@@ -27,7 +27,7 @@ export const parseRecipe = (recipe: Recipe) => {
 
         ingredients = shapedRecipe.inShape.flat()
                                           .filter(x => x !== null)
-                                          .map(x => recipeItemToId(x)) // Get RecipeItem id
+                                          .map(x => recipeItemToId(x))
     } else {
         let shapelessRecipe = recipe as ShapelessRecipe
 
@@ -37,6 +37,8 @@ export const parseRecipe = (recipe: Recipe) => {
     
     return {
         requiresTable: requiresTable,
-        ingredients: ingredients.reduce((p, c) => (p[c!] = (p[c!] ?? 0) + 1, p), {})
+        ingredients: ingredients.reduce((p, c) => (p[c!] = (p[c!] ?? 0) + 1, p), {}),
+        //@ts-ignore
+        resultCount: recipe.result!.count as number
     }
 }

@@ -38,8 +38,8 @@ export const mergeWithConsequences = (observation: Observation, consequences: Co
     let merged = { ...observation }
     
     if (consequences.inventory !== undefined) {
-        merged.inventory = Object.entries(consequences.inventory!)
-                                 .reduce((p, [k, v]) => (p[k] !== undefined ? p[k] += v : p[k] = v, p), observation.inventory)
+        merged.inventory.items = Object.entries(consequences.inventory!)
+                                 .reduce((p, [k, v]) => (p[k] !== undefined ? p[k] += v : p[k] = v, p), observation.inventory.items)
     }
 
     return merged

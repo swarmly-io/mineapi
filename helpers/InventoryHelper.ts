@@ -2,10 +2,9 @@ import { NotEnoughItemsError } from '../errors/NotEnoughItemsError.js'
 import { Observation } from '../types.js'
 
 export const assertHas = (observation: Observation, count: number, itemFilter: number | string | ((itemId: number | string) => boolean)) => {
-
     let itemCount = 0
 
-    if (typeof itemFilter === 'number') {
+    if (typeof itemFilter === 'number' || typeof itemFilter === 'string') {
         itemCount = observation.inventory.items[itemFilter] ?? 0
     } else if (typeof itemFilter === 'function') {
         itemCount = Object.keys(observation.inventory.items)
@@ -15,5 +14,5 @@ export const assertHas = (observation: Observation, count: number, itemFilter: n
     }
 
     if (itemCount < count)
-        throw new NotEnoughItemsError(typeof itemFilter === 'number' ? itemFilter : -1, count, itemCount)
+        throw new NotEnoughItemsError(((typeof itemFilter === 'number' || typeof itemFilter === 'string') ? itemFilter as number : -1), count, itemCount)
 }
