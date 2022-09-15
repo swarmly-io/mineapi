@@ -27,4 +27,6 @@ export interface Observation {
 export interface Consequences {
     success: boolean,
     inventory?: Record<number | string, number>,
+    time?: number,
+    position?: Vec3
 }

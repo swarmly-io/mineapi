@@ -44,5 +44,13 @@ export const mergeWithConsequences = (observation: Observation, consequences: Co
                                  .reduce((p, [k, v]) => (p[k] !== undefined ? p[k] += v : p[k] = v, p), observation.inventory.items)
     }
 
+    if (consequences.time !== undefined) {
+        merged.time = consequences.time!
+    }
+
+    if (consequences.position !== undefined) {
+        merged.position = consequences.position!
+    }
+
     return merged
 }

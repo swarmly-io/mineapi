@@ -1,7 +1,7 @@
 import { Bot } from "mineflayer"
 import { Vec3 } from 'vec3'
 
-export const findBlock = function(bot: Bot, blockId: number, maxDistance: number, center?: Vec3) {
+export const findBlock = function(bot: Bot, blockId: number | number[], maxDistance: number, center?: Vec3) {
     return bot.findBlock({
         matching: blockId,
         maxDistance: maxDistance,
