@@ -3,8 +3,9 @@ import mineflayer from "mineflayer"
 import mcd from 'minecraft-data'
 import readline from 'readline'
 import { observe } from './Observer.js'
+import { MinecraftVersion } from './Config.js'
 
-let mcData = mcd('1.17.1')
+let mcData = mcd(MinecraftVersion)
 
 const host = process.argv[2] || '127.0.0.1'
 const port = process.argv[3] || 25565
@@ -21,9 +22,9 @@ const bot = mineflayer.createBot({
 
 const attributes = new Attributes(bot, mcData)
 
-let chain = [attributes.findAndCollectResource(mcData.blocksByName.oak_log.id, 3), 
-    attributes.craft(mcData.itemsByName.oak_planks.id, 12, false),
-    attributes.craft(mcData.itemsByName.stick.id, 4, false),
+let chain = [attributes.collect_logs(3), 
+    attributes.craft({ itemIds: mcData.itemsArray.filter(x => x.name.endsWith('_planks')).map(x => x.id), count: 12, allowWalking: false }),
+    attributes.craft({ itemIds: mcData.itemsByName.stick.id, count: 4, allowWalking: false }),
     attributes.craft_axe()]
 
 async function read() {
@@ -63,9 +64,9 @@ async function read() {
               // it should evaluate the chain and see if it is possible, throw not possible exception | perform action
 
               // todo add canDo([collect_wood, craft_table, make_axe, craft_pickaxe]) -> evaluates chain and returns true | false 
-              await attributes.findAndCollectResource(mcData.blocksByName.oak_log.id, 3)
-              await attributes.craft_table()
-              await attributes.craft_pickaxe()
+            //   await attributes.findAndCollectResource(mcData.blocksByName.oak_log.id, 3)
+            //   await attributes.craft_table()
+            //   await attributes.craft_pickaxe()
           }
         //   if (cmd == "collect") {
         //       await bot.collect()

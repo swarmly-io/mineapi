@@ -9,7 +9,7 @@ export const findBlock = function(bot: Bot, blockId: number, maxDistance: number
     })
 }
 
-export const findBlocks = function(bot: Bot, blockId: number, maxDistance: number, count: number, center?: Vec3) {
+export const findBlocks = function(bot: Bot, blockId: number | number[], maxDistance: number, count: number, center?: Vec3) {
     return bot.findBlocks({
         matching: blockId,
         maxDistance: maxDistance,

@@ -2,7 +2,9 @@ import { IndexedData } from 'minecraft-data'
 import { Bot } from 'mineflayer'
 import  collectBlock from 'mineflayer-collectblock'
 import { pathfinder } from 'mineflayer-pathfinder'
-import { Action, CraftAction, FindAndCollectAction } from './Action.js'
+import { Action } from './actions/Action.js'
+import { FindAndCollectAction, FindAndCollectParams as FindAndCollectActionParams } from './actions/FindAndCollectResourceAction.js'
+import { CraftAction, CraftActionParams } from './actions/CraftAction.js'
 import { NotPossibleError } from './errors/NotPossibleError.js'
 import { mergeWithConsequences, observe } from './Observer.js'
 
@@ -19,7 +21,7 @@ export class Attributes {
         this.bot.loadPlugin(pathfinder)
     }
 
-    async canDo(actions: Action[]): Promise<true | number> { // Returns true when all actions are possible, otherwise the index of the failing action
+    async canDo(actions: Action<any>[]): Promise<true | number> { // Returns true when all actions are possible, otherwise the index of the failing action
 
         let observation = await observe(this.bot)
 
@@ -38,7 +40,7 @@ export class Attributes {
         return true
     }
 
-    async tryDo(actions: Action[]): Promise<any> {
+    async tryDo(actions: Action<any>[]): Promise<any> {
 
         let result = await this.canDo(actions)
         if (true !== result) {
@@ -57,16 +59,23 @@ export class Attributes {
         }
     }
 
-    findAndCollectResource(blockId: number, amountToMine: number, allowedMaxDistance = DEFAULT_ALLOWED_DISTANCE) {
-        return new FindAndCollectAction(this.bot, this.mcData, blockId, amountToMine, allowedMaxDistance)
+    findAndCollectResource(params: FindAndCollectActionParams) {
+        return new FindAndCollectAction({ bot: this.bot, mcData: this.mcData, ...params })
     }
 
-    craft(itemId: number, count: number, allowWalking = false, allowedMaxDistance = DEFAULT_ALLOWED_DISTANCE) {
-        return new CraftAction(this.bot, this.mcData, itemId, count, allowWalking, allowedMaxDistance)        
+    craft(params: CraftActionParams) {
+        return new CraftAction({ bot: this.bot, mcData: this.mcData, ...params })        
     }
 
     // Crafting shortcuts
-    craft_table = () => new CraftAction(this.bot, this.mcData, this.mcData.itemsByName.crafting_table.id, 1)
-    craft_pickaxe = () => new CraftAction(this.bot, this.mcData, this.mcData.itemsByName.wooden_pickaxe.id, 1)
-    craft_axe = () => new CraftAction(this.bot, this.mcData, this.mcData.itemsByName.wooden_axe.id, 1)
+    craft_table = () => new CraftAction({ bot: this.bot, mcData: this.mcData, itemIds: this.mcData.itemsByName.crafting_table.id, count: 1 })
+    craft_pickaxe = () => new CraftAction({ bot: this.bot, mcData: this.mcData, itemIds: this.mcData.itemsByName.wooden_pickaxe.id, count: 1 })
+    craft_axe = () => new CraftAction({ bot: this.bot, mcData: this.mcData, itemIds: this.mcData.itemsByName.wooden_axe.id, count: 1 })
+
+    collect_logs = (count: number, allowedMaxDistance = DEFAULT_ALLOWED_DISTANCE) => // will also allow 'striped_x_log', but i think it dosen't matter
+        new FindAndCollectAction({ bot: this.bot, 
+                                   mcData: this.mcData, 
+                                   blockIds: this.mcData.blocksArray.filter(x => x.name.endsWith('_log')).map(x => x.id), 
+                                   amountToCollect: count, 
+                                   allowedMaxDistance: allowedMaxDistance })
 }

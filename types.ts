@@ -1,6 +1,10 @@
 import { Vec3 } from 'vec3'
 import { Entity } from 'prismarine-entity'
 
+export type InventoryObservation = {
+    items: Record<number | string, number>,
+    emptySlots: number
+}
 
 export interface Observation {
     position: Vec3,
@@ -17,10 +21,7 @@ export interface Observation {
         thunderLevel: number,
     },
     closeEntities: Entity[],
-    inventory: {
-        items: Record<number | string, number>,
-        emptySlots: number
-    }
+    inventory: InventoryObservation
 }
 
 export interface Consequences {

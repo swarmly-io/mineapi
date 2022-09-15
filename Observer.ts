@@ -1,14 +1,19 @@
 import { Bot } from "mineflayer"
 import { groupBy } from "underscore"
-import { Consequences, Observation } from "./types"
+import { Consequences, InventoryObservation, Observation } from "./types"
 
 const EntityMaxDistanceSquared = Math.pow(32, 2) 
 
-const observeInventory = function(bot: Bot): Record<number, number> {
+export const observeInventory = function(bot: Bot): InventoryObservation {
     // returns a dictionary with item id's as keys and the number of items as the value
-    return Object.entries(groupBy(bot.inventory.items(), (item) => item.type)).reduce((prev: any, [key, val]: any) => 
+    let items = Object.entries(groupBy(bot.inventory.items(), (item) => item.type)).reduce((prev: any, [key, val]: any) => 
         (prev[key] = val.map(x => x.count).reduce((p, c) => p + c, 0), prev)
     , {})
+
+    return {
+        items: items,
+        emptySlots: bot.inventory.emptySlotCount()
+    }
 }
 
 export const observe = async function(bot: Bot): Promise<Observation> {
@@ -27,10 +32,7 @@ export const observe = async function(bot: Bot): Promise<Observation> {
             thunderLevel: bot.thunderState
         },
         closeEntities: Object.values(bot.entities).filter(x => x.position.distanceSquared(bot.entity.position) <= EntityMaxDistanceSquared),
-        inventory: {
-            items: observeInventory(bot),
-            emptySlots: bot.inventory.emptySlotCount()
-        }
+        inventory: observeInventory(bot)
     }
 }
 
