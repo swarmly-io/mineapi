@@ -1,6 +1,6 @@
 import { Bot } from "mineflayer"
 import { IndexedData } from "minecraft-data"
-import { Consequences, Observation } from "../types.js"
+import { Consequences, Observation } from "../types"
 
 export const DEFAULT_ALLOWED_DISTANCE = 16
 

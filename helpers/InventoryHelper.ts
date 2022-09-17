@@ -1,5 +1,5 @@
-import { NotEnoughItemsError } from '../errors/NotEnoughItemsError.js'
-import { Observation } from '../types.js'
+import { NotEnoughItemsError } from '../errors/NotEnoughItemsError'
+import { Observation } from '../types'
 
 export const assertHas = (observation: Observation, count: number, itemFilter: number | string | ((itemId: number | string) => boolean)) => {
     let itemCount = 0

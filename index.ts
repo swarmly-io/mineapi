@@ -1,9 +1,9 @@
-import { Attributes } from './Attributes.js'
+import { Attributes } from './Attributes'
 import mineflayer from "mineflayer"
 import mcd from 'minecraft-data'
 import readline from 'readline'
-import { observe } from './Observer.js'
-import { MinecraftVersion } from './Config.js'
+import { observe } from './Observer'
+import { MinecraftVersion } from './Config'
 
 let mcData = mcd(MinecraftVersion)
 
@@ -21,11 +21,19 @@ const bot = mineflayer.createBot({
 });
 
 const attributes = new Attributes(bot, mcData)
-
+var i = (x) => { console.log('inspect',x); return x; }
 let chain = [attributes.collect_logs(3), 
-    attributes.craft({ itemIds: mcData.itemsArray.filter(x => x.name.endsWith('_planks')).map(x => x.id), count: 12, allowWalking: false }),
+    attributes.craft({ itemIds: mcData.itemsArray.filter(x => x.name.endsWith('_planks') && !x.name.includes('warped') ).map(x => x.id), count: 12, allowWalking: false }),
     attributes.craft({ itemIds: mcData.itemsByName.stick.id, count: 4, allowWalking: false }),
     attributes.craft_axe()]
+
+i(mcData.items[701])
+
+let chain_craft_only = [
+    attributes.craft_pickaxe()]
+
+let chain_table_only = [
+    attributes.place_table()]
 
 async function read() {
   const reader = readline.createInterface({
@@ -48,6 +56,26 @@ async function read() {
         if (cmd === 'execute chain') {
             try {
                 attributes.tryDo(chain).then(res => {
+                    console.log("Done")
+                })
+            } catch (e) {
+                console.log(e)
+            }
+        }
+
+        if (cmd === 'execute chain table') {
+            try {
+                attributes.tryDo(chain_craft_only).then(res => {
+                    console.log("Done")
+                })
+            } catch (e) {
+                console.log(e)
+            }
+        }
+
+        if (cmd === 'place table') {
+            try {
+                attributes.tryDo(chain_table_only).then(res => {
                     console.log("Done")
                 })
             } catch (e) {

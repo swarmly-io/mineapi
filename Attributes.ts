@@ -1,14 +1,16 @@
 import { IndexedData } from 'minecraft-data'
 import { Bot } from 'mineflayer'
-import  collectBlock from 'mineflayer-collectblock'
 import { goals, pathfinder } from 'mineflayer-pathfinder'
-import { Action, ActionParams } from './actions/Action.js'
-import { FindAndCollectAction, FindAndCollectParams as FindAndCollectActionParams } from './actions/FindAndCollectResourceAction.js'
-import { CraftAction, CraftActionParams } from './actions/CraftAction.js'
-import { NotPossibleError } from './errors/NotPossibleError.js'
-import { mergeWithConsequences, observe } from './Observer.js'
-import { TravelAction } from './actions/TravelAction.js'
-import { SleepAction } from './actions/SleepAction.js'
+import { Action, ActionParams } from './actions/Action'
+import { FindAndCollectAction, FindAndCollectParams as FindAndCollectActionParams } from './actions/FindAndCollectResourceAction'
+import { CraftAction, CraftActionParams } from './actions/CraftAction'
+import { NotPossibleError } from './errors/NotPossibleError'
+import { mergeWithConsequences, observe } from './Observer'
+import { TravelAction } from './actions/TravelAction'
+import { SleepAction } from './actions/SleepAction'
+import { PlaceAction, PlaceActionParams } from './actions/PlaceAction'
+import { plugin } from 'mineflayer-collectblock'
+
 
 const DEFAULT_ALLOWED_DISTANCE = 16
 export class Attributes {
@@ -21,7 +23,8 @@ export class Attributes {
         this.bot = bot
         this.mcData = mcData
         this.actionOptions = { bot: bot, mcData: mcData }
-        this.bot.loadPlugin(collectBlock.plugin)
+        console.log(plugin)
+        this.bot.loadPlugin(plugin)
         this.bot.loadPlugin(pathfinder)
     }
 
@@ -71,8 +74,13 @@ export class Attributes {
         return new CraftAction({ ...this.actionOptions, ...params })        
     }
 
+    place(params: PlaceActionParams) {
+        return new PlaceAction({ ...this.actionOptions, ...params })
+    }
+
     // Crafting shortcuts
     craft_table = () => new CraftAction({ ...this.actionOptions, itemIds: this.mcData.itemsByName.crafting_table.id, count: 1 })
+    place_table = () => new PlaceAction({ ...this.actionOptions, itemId: this.mcData.itemsByName.crafting_table.id, count: 1 })
     craft_pickaxe = () => new CraftAction({ ...this.actionOptions, itemIds: this.mcData.itemsByName.wooden_pickaxe.id, count: 1 })
     craft_axe = () => new CraftAction({ ...this.actionOptions, itemIds: this.mcData.itemsByName.wooden_axe.id, count: 1 })
 

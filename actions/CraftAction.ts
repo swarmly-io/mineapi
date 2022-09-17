@@ -1,9 +1,9 @@
-import { RecipeNotFoundError } from "../errors/RecipeNotFoundError.js"
-import { findBlock } from "../helpers/EnvironmentHelper.js"
-import { craftableAmount, findRecipes } from "../helpers/RecipeHelper.js"
-import { observeInventory } from "../Observer.js"
-import { Observation, Consequences } from "../types.js"
-import { Action, ActionParams } from "./Action.js"
+import { RecipeNotFoundError } from "../errors/RecipeNotFoundError"
+import { findBlock } from "../helpers/EnvironmentHelper"
+import { craftableAmount, findRecipes } from "../helpers/RecipeHelper"
+import { observeInventory } from "../Observer"
+import { Observation, Consequences } from "../types"
+import { Action, ActionParams } from "./Action"
 
 export type CraftActionParams = {
     itemIds: number | number[],
@@ -29,8 +29,9 @@ export class CraftAction extends Action<CraftActionParams> {
         let itemIds = typeof this.options.itemIds === 'number' ? [this.options.itemIds] : this.options.itemIds
 
         let inventory = observeInventory(this.bot)
+        console.log(inventory)
         let availableRecipes = itemIds.map(id => findRecipes(this.mcData, id, craftingTable !== null, inventory)).flat()
-
+        console.log(availableRecipes)
         if (availableRecipes.length === 0) 
             throw new RecipeNotFoundError(typeof this.options.itemIds === 'number' ? this.options.itemIds : -1)
 

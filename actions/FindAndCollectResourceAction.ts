@@ -1,10 +1,10 @@
 import { Block } from 'prismarine-block'
-import { BlockNotFoundError } from "../errors/BlockNotFoundError.js"
-import { NotEnoughItemsError } from "../errors/NotEnoughItemsError.js"
-import { findBlocks } from "../helpers/EnvironmentHelper.js"
-import { assertHas } from "../helpers/InventoryHelper.js"
-import { Observation, Consequences } from "../types.js"
-import { Action, ActionParams } from "./Action.js"
+import { BlockNotFoundError } from "../errors/BlockNotFoundError"
+import { NotEnoughItemsError } from "../errors/NotEnoughItemsError"
+import { findBlocks } from "../helpers/EnvironmentHelper"
+import { assertHas } from "../helpers/InventoryHelper"
+import { Observation, Consequences } from "../types"
+import { Action, ActionParams } from "./Action"
 
 export type FindAndCollectParams = {
     blockIds: number | number[],

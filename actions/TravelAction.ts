@@ -1,6 +1,6 @@
-import { Action, ActionParams } from "./Action.js";
+import { Action, ActionParams } from "./Action";
 import { goals } from 'mineflayer-pathfinder'
-import { Observation, Consequences } from "../types.js";
+import { Observation, Consequences } from "../types";
 
 export type TravelActionParams = {
     goal: goals.Goal,

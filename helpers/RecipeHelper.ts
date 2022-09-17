@@ -1,7 +1,7 @@
 import { IndexedData, Recipe, RecipeItem, ShapedRecipe, ShapelessRecipe} from 'minecraft-data'
-import { InventoryObservation } from '../types.js'
+import { InventoryObservation } from '../types'
 import prl, { RecipeClasses, Recipe as PrismarineRecipe } from 'prismarine-recipe'
-import { MinecraftVersion } from '../Config.js'
+import { MinecraftVersion } from '../Config'
 
 //@ts-ignore
 const PRecipe: RecipeClasses = prl(MinecraftVersion)

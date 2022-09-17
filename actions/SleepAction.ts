@@ -1,7 +1,7 @@
-import { BlockNotFoundError } from "../errors/BlockNotFoundError.js";
-import { findBlock } from "../helpers/EnvironmentHelper.js";
-import { Observation, Consequences } from "../types.js";
-import { Action, ActionParams, DEFAULT_ALLOWED_DISTANCE } from "./Action.js";
+import { BlockNotFoundError } from "../errors/BlockNotFoundError";
+import { findBlock } from "../helpers/EnvironmentHelper";
+import { Observation, Consequences } from "../types";
+import { Action, ActionParams, DEFAULT_ALLOWED_DISTANCE } from "./Action";
 
 export type SleepActionParams = {
     allowedMaxDistance?: number
