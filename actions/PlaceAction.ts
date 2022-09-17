@@ -19,10 +19,7 @@ export class PlaceAction extends Action<PlaceActionParams> {
         let block = this.getAvailableBlock()
 
         // @ts-ignore
-        this.bot.equip(block.id, "hand", (x) => {
-            console.log('here',x)
-        })
-
+        this.bot.equip(block.id, "hand")
         // @ts-ignore
         this.bot.placeBlock(this.bot.blockAt(this.bot.entity.position.offset(1, -1, 0)), new Vec3(0, 1, 0))
         // todo where is a good place to place a block?
