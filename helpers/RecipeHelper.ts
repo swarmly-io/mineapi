@@ -48,12 +48,14 @@ export const parseRecipe = (recipe: Recipe): IngredientRecipe => {
         ingredients = shapelessRecipe.ingredients.map(x => recipeItemToId(x))
     }
     
+    let mineflayerRecipe = new PRecipe.Recipe(recipe)
+
     return {
         requiresTable: requiresTable,
         ingredients: ingredients.reduce((p, c) => (p[c!] = (p[c!] ?? 0) + 1, p), {}),
         //@ts-ignore
-        resultCount: recipe.result!.count as number,
-        mineflayerRecipe: new PRecipe.Recipe(recipe)
+        resultCount: mineflayerRecipe.result.count,
+        mineflayerRecipe: mineflayerRecipe
     }
 }
 

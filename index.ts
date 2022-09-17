@@ -2,10 +2,36 @@ import { Attributes } from './Attributes'
 import mineflayer from "mineflayer"
 import mcd from 'minecraft-data'
 import readline from 'readline'
+import { ILogObject, Logger } from 'tslog'
 import { observe } from './Observer'
 import { MinecraftVersion } from './Config'
+import fs from 'fs'
 
 let mcData = mcd(MinecraftVersion)
+
+if (fs.existsSync('log.txt')) { // remove log file
+    fs.unlinkSync('log.txt')
+}
+
+const writeLog = (log: ILogObject) => {
+    let obj = {
+        date: log.date,
+        level: log.logLevel,
+        file: `${log.fileName}:${log.lineNumber}`,
+        message: log.argumentsArray
+    }
+    fs.appendFileSync('log.txt', JSON.stringify(obj, null, 2) + '\n')
+}
+const logger = new Logger()
+logger.attachTransport({
+    silly: writeLog,
+    debug: writeLog,
+    trace: writeLog,
+    info: writeLog,
+    warn: writeLog,
+    error: writeLog,
+    fatal: writeLog,
+}, "silly")
 
 const host = process.argv[2] || '127.0.0.1'
 const port = process.argv[3] || 25565
@@ -20,7 +46,7 @@ const bot = mineflayer.createBot({
 //  password: process.argv[5],
 });
 
-const attributes = new Attributes(bot, mcData)
+const attributes = new Attributes(bot, mcData, logger)
 var i = (x) => { console.log('inspect',x); return x; }
 let chain = [attributes.collect_logs(3), 
     attributes.craft({ itemIds: mcData.itemsArray.filter(x => x.name.endsWith('_planks') && !x.name.includes('warped') ).map(x => x.id), count: 12, allowWalking: false }),
@@ -46,8 +72,8 @@ async function read() {
         }
         if (cmd == 'chain possible') {
             attributes.canDo(chain).then(x => {
-                if (typeof x === 'number') {
-                    console.log("Chain not possible: Failing at task " + (x + 1))
+                if (true !== x) {
+                    console.log(`Chain not possible: Task ${x.index + 1} fails with reason '${x.reason}'`)
                 } else {
                     console.log("Chain is possible")
                 }

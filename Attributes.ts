@@ -4,13 +4,13 @@ import { goals, pathfinder } from 'mineflayer-pathfinder'
 import { Action, ActionParams } from './actions/Action'
 import { FindAndCollectAction, FindAndCollectParams as FindAndCollectActionParams } from './actions/FindAndCollectResourceAction'
 import { CraftAction, CraftActionParams } from './actions/CraftAction'
-import { NotPossibleError } from './errors/NotPossibleError'
-import { mergeWithConsequences, observe } from './Observer'
+import { mergeWithConsequences, observe, prettyConsequences, prettyObservation } from './Observer'
 import { TravelAction } from './actions/TravelAction'
 import { SleepAction } from './actions/SleepAction'
 import { PlaceAction, PlaceActionParams } from './actions/PlaceAction'
 import { plugin } from 'mineflayer-collectblock'
-
+import { FailedChainResult } from './types'
+import { Logger } from 'tslog'
 
 const DEFAULT_ALLOWED_DISTANCE = 16
 export class Attributes {
@@ -18,52 +18,68 @@ export class Attributes {
     bot: Bot
     mcData: IndexedData
     actionOptions: ActionParams<any>
+    logger: Logger
 
-    constructor(bot, mcData) {
+    constructor(bot: Bot, mcData: IndexedData, logger: Logger) {
         this.bot = bot
         this.mcData = mcData
         this.actionOptions = { bot: bot, mcData: mcData }
+        this.logger = logger
         console.log(plugin)
         this.bot.loadPlugin(plugin)
         this.bot.loadPlugin(pathfinder)
     }
 
-    async canDo(actions: Action<any>[]): Promise<true | number> { // Returns true when all actions are possible, otherwise the index of the failing action
+    async canDo(actions: Action<any>[]): Promise<true | FailedChainResult> { // Returns true when all actions are possible, otherwise the index of the failing action
 
+        this.logger.debug(`Testing chain: [${actions.map(x => x.constructor.name)}]`)
         let observation = await observe(this.bot)
 
         for (let i = 0; i < actions.length; i++) {
             let action = actions[i]           
+            this.logger.debug(`Testing action ${i} (${action.constructor.name})`, { params: action.options, observation: prettyObservation(observation, this.mcData) })
 
             let result = await action.possible(observation)
             if (!result.success) {
-                return i
+                this.logger.warn(`Chain not possible. Action ${i} (${action.constructor.name}) failed: '${result.reason}'`)
+                return {
+                    index: i,
+                    reason: result.reason
+                }
             }
-
+            this.logger.debug(`Action ${i} (${action.constructor.name}) possible`, { result: prettyConsequences(result, this.mcData), observation: observation })
             //merge the consequences of previous action with the consequences
             observation = mergeWithConsequences(observation, result)
         }
 
+        this.logger.debug(`Chain is possible.`, { endState: observation })
+
         return true
     }
 
-    async tryDo(actions: Action<any>[]): Promise<any> {
+    async tryDo(actions: Action<any>[]): Promise<true | FailedChainResult> {
 
+        this.logger.debug(`Trying to do chain: [${actions.map(x => x.constructor.name)}]`)
         let result = await this.canDo(actions)
         if (true !== result) {
-            throw new NotPossibleError()
+            this.logger.error(`Chain not possible`, {result: result})
+            return result
         }
 
         for (let i = 0; i < actions.length; i++) {
             let action = actions[i]
-
-            try {
-                await action.do()
-            } catch (e) {
-                console.log(`Failed at task ${i}`)
-                throw e
+            this.logger.debug(`Executing action ${i} (${action.constructor.name})`, {params: action.options})
+            let actionResult = await action.do() 
+            if (true !== actionResult) {
+                this.logger.error(`Action ${i} (${action.constructor.name}) failed`, {result: actionResult})
+                return {
+                    index: i,
+                    reason: `${actionResult.reason}`
+                }
             }
         }
+
+        return true
     }
 
     findAndCollectResource(params: FindAndCollectActionParams) {

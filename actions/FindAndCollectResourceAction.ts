@@ -5,6 +5,7 @@ import { findBlocks } from "../helpers/EnvironmentHelper"
 import { assertHas } from "../helpers/InventoryHelper"
 import { Observation, Consequences } from "../types"
 import { Action, ActionParams } from "./Action"
+import { ActionDoResult } from './types'
 
 export type FindAndCollectParams = {
     blockIds: number | number[],
@@ -22,11 +23,11 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
         super(params)
     }
 
-    async do(): Promise<void> { // TODO: Do we need metadata?        
+    async do(): Promise<ActionDoResult> { // TODO: Do we need metadata?        
         const blocks = findBlocks(this.bot, this.options.blockIds, this.options.allowedMaxDistance, this.options.amountToCollect)
 
         if (blocks.length === 0) {
-            throw new BlockNotFoundError(typeof this.options.blockIds === 'number' ? this.options.blockIds : -1)
+            return { reason: "FindAndCollectBlock: No blocks found" }
         }
 
         const targets: Block[] = []
@@ -38,11 +39,12 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
 
         //@ts-ignore  ts doesnt know about mineflayer plugins
         await this.bot.collectBlock.collect(targets)
+
+        return true
     }
 
     async possible (observation: Observation): Promise<Consequences> {
         let blockTypes = typeof this.options.blockIds === 'number' ? [this.mcData.blocks[this.options.blockIds]] : this.options.blockIds.map(x => this.mcData.blocks[x])
-
         // Now checking for harvest tools
         let mineableBlockTypes = blockTypes.filter(blockType => {
             if (blockType.harvestTools !== undefined) {
@@ -57,13 +59,13 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
             return true
         })
         if (mineableBlockTypes.length === 0) {
-            return { success: false }
+            return { success: false, reason: "FindAndCollectResource: No blocks found" }
         }
 
         const blocks = findBlocks(this.bot, mineableBlockTypes.map(x => x.id), this.options.allowedMaxDistance, this.options.amountToCollect, observation.position)
         
         if (blocks.length < this.options.amountToCollect) {
-            return { success: false }
+            return { success: false, reason: "FindAndCollectResource: Not enough blocks found" }
         }
 
         // WARNING:

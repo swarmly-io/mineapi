@@ -2,8 +2,9 @@ import { RecipeNotFoundError } from "../errors/RecipeNotFoundError"
 import { findBlock } from "../helpers/EnvironmentHelper"
 import { craftableAmount, findRecipes } from "../helpers/RecipeHelper"
 import { observeInventory } from "../Observer"
-import { Observation, Consequences } from "../types"
+import { Observation, Consequences, SuccessfulConsequences } from "../types"
 import { Action, ActionParams } from "./Action"
+import { ActionDoResult } from "./types"
 
 export type CraftActionParams = {
     itemIds: number | number[],
@@ -19,7 +20,7 @@ export class CraftAction extends Action<CraftActionParams> {
         params.count = params.count ?? 1
     }
 
-    async do(): Promise<any> {
+    async do(): Promise<ActionDoResult> {
         let craftingTable = findBlock(this.bot, 
             this.mcData.blocksByName.crafting_table.id, 
             this.options.allowedMaxDistance !== undefined ? this.options.allowedMaxDistance : 6.0, 
@@ -29,11 +30,9 @@ export class CraftAction extends Action<CraftActionParams> {
         let itemIds = typeof this.options.itemIds === 'number' ? [this.options.itemIds] : this.options.itemIds
 
         let inventory = observeInventory(this.bot)
-        console.log(inventory)
         let availableRecipes = itemIds.map(id => findRecipes(this.mcData, id, craftingTable !== null, inventory)).flat()
-        console.log(availableRecipes)
         if (availableRecipes.length === 0) 
-            throw new RecipeNotFoundError(typeof this.options.itemIds === 'number' ? this.options.itemIds : -1)
+            return { reason: "Craft: Could not find recipe for item"}
 
         let crafted = 0
         for (let i = 0; i < availableRecipes.length; i++) {
@@ -48,6 +47,13 @@ export class CraftAction extends Action<CraftActionParams> {
             }
             inventory = observeInventory(this.bot)
         }
+
+        
+        if (crafted < this.options.count!) {
+            return { reason: "Craft: Could not craft enough items" }
+        }
+
+        return true
     }
 
     async possible(observation: Observation): Promise<Consequences> {
@@ -55,24 +61,41 @@ export class CraftAction extends Action<CraftActionParams> {
             this.mcData.blocksByName.crafting_table.id, 
             this.options.allowedMaxDistance !== undefined ? this.options.allowedMaxDistance : 6.0, 
             observation.position)
-        
 
         let itemIds = typeof this.options.itemIds === 'number' ? [this.options.itemIds] : this.options.itemIds
 
-        let consequences: Consequences = { success: true, inventory: {}}
-        let inventory = observation.inventory
+        let consequences: SuccessfulConsequences = { success: true, inventory: {}}
+        let inventory = { items: {...observation.inventory.items}, emptySlots: observation.inventory.emptySlots} 
         let availableRecipes = itemIds.map(id => findRecipes(this.mcData, id, craftingTable !== null, inventory)).flat()
+
+        if (availableRecipes.length === 0) {
+            return { success: false, reason: `Craft: Could not find a recipe, crafting table available: ${craftingTable !== null}`}
+        }
+
+        let crafted = 0
         for (let i = 0; i < availableRecipes.length; i++) {
             let recipe = availableRecipes[i]
-            let craftCount = craftableAmount(recipe, inventory)
+            let maxCount = Math.ceil((this.options.count! - crafted) / recipe.resultCount)
+            let craftCount = Math.min(maxCount, craftableAmount(recipe, inventory))
             
             Object.entries(recipe.ingredients)
                 .forEach(([itemId, itemCount]) => {
-                    inventory[itemId] -= itemCount * craftCount
-                    consequences[itemId] = (consequences[itemId] ?? 0) - (itemCount * craftCount)
+                    inventory.items[itemId] -= itemCount * craftCount //
+                    consequences.inventory![itemId] = (consequences.inventory![itemId] ?? 0) - (itemCount * craftCount)
                 })
+            consequences.inventory![recipe.mineflayerRecipe.result.id] = (inventory![recipe.mineflayerRecipe.result.id] ?? 0) + (recipe.mineflayerRecipe.result.count * craftCount)
+
+            crafted += craftCount * recipe.resultCount
+            if (crafted >= this.options.count!)
+                break
         }
 
+        if (crafted < this.options.count!) {
+            return {
+                success: false,
+                reason: 'Craft: Cannot craft enough items'
+            }
+        }
         return consequences
     }
 }

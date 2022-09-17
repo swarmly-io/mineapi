@@ -2,6 +2,7 @@ import { BlockNotFoundError } from "../errors/BlockNotFoundError";
 import { findBlock } from "../helpers/EnvironmentHelper";
 import { Observation, Consequences } from "../types";
 import { Action, ActionParams, DEFAULT_ALLOWED_DISTANCE } from "./Action";
+import { ActionDoResult } from "./types";
 
 export type SleepActionParams = {
     allowedMaxDistance?: number
@@ -27,7 +28,7 @@ export class SleepAction extends Action<SleepActionParams> {
         }
 
         if (!canSleep) 
-            return { success: false }
+            return { success: false, reason: 'Sleep: Can only sleep during night or thunderstorm ' }
 
         let block = findBlock(
             this.bot,
@@ -36,19 +37,22 @@ export class SleepAction extends Action<SleepActionParams> {
             observation.position
         )
         if (block === null) 
-            return { success: false }
+            return { success: false, reason: 'Sleep: No bed found' }
 
         return { success: true, time: 0, position: block.position }
     }
     
-    async do(): Promise<any> {
+    async do(): Promise<ActionDoResult> {
+        // TODO: Code doesn't check whether the bed is occupied
         let block = findBlock(
             this.bot,
             this.mcData.blocksArray.filter(x => x.name.endsWith('_bed')).map(x => x.id),
             this.options.allowedMaxDistance!)
         if (block === null) {
-            throw new BlockNotFoundError(this.mcData.blocksByName.white_bed.id)
+            return { reason: "Sleep: Could not find bed." }
         }
         await this.bot.sleep(block)
+        
+        return true
     }
 }

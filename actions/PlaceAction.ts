@@ -2,6 +2,7 @@ import { observeInventory } from "../Observer"
 import { Observation, Consequences, InventoryObservation } from "../types"
 import { Action, ActionParams } from "./Action"
 import { Vec3 } from 'vec3'
+import { ActionDoResult } from "./types"
 
 export type PlaceActionParams = {
     itemId: number,
@@ -15,7 +16,7 @@ export class PlaceAction extends Action<PlaceActionParams> {
         super(params)
     }
 
-    async do(): Promise<any> {
+    async do(): Promise<ActionDoResult> {
         let block = this.getAvailableBlock()
 
         // @ts-ignore
@@ -23,14 +24,18 @@ export class PlaceAction extends Action<PlaceActionParams> {
         // @ts-ignore
         this.bot.placeBlock(this.bot.blockAt(this.bot.entity.position.offset(1, -1, 0)), new Vec3(0, 1, 0))
         // todo where is a good place to place a block?
+
+        return true
     }
 
     async possible(observation: Observation): Promise<Consequences> {
         let value = false
+        let reason: string | undefined = undefined
             try {
                 value = !!this.getAvailableBlock(observation.inventory)
             } catch {
                 value = false;
+                reason = 'PlaceBlock: Block not in inventory'
             }
 
         let newInventory = !value ? 
@@ -39,6 +44,7 @@ export class PlaceAction extends Action<PlaceActionParams> {
         
         return Promise.resolve({
             success: value,
+            reason: reason,
             inventory: newInventory,
             position: observation.position,
             time: observation.time

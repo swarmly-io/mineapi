@@ -1,8 +1,11 @@
 import { Vec3 } from 'vec3'
 import { Entity } from 'prismarine-entity'
 
+
+export type ItemsRecord = Record<string, number>
+
 export type InventoryObservation = {
-    items: Record<number | string, number>,
+    items: ItemsRecord,
     emptySlots: number
 }
 
@@ -24,9 +27,21 @@ export interface Observation {
     inventory: InventoryObservation
 }
 
-export interface Consequences {
-    success: boolean,
-    inventory?: Record<number | string, number>,
+export interface SuccessfulConsequences {
+    success: true,    
+    inventory?: ItemsRecord,
     time?: number,
     position?: Vec3
+}
+
+export interface UnsuccessfulConsequences {
+    success: false,
+    reason: string,
+}
+
+export type Consequences = SuccessfulConsequences | UnsuccessfulConsequences
+
+export type FailedChainResult = {
+    index: number,
+    reason: string
 }

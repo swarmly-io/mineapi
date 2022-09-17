@@ -1,6 +1,7 @@
 import { Action, ActionParams } from "./Action";
 import { goals } from 'mineflayer-pathfinder'
 import { Observation, Consequences } from "../types";
+import { ActionDoResult } from "./types";
 
 export type TravelActionParams = {
     goal: goals.Goal,
@@ -12,8 +13,10 @@ export class TravelAction extends Action<TravelActionParams> {
         super(params)
     }
 
-    async do(): Promise<any> {
+    async do(): Promise<ActionDoResult> {
         await this.bot.pathfinder.goto(this.options.goal)
+
+        return true
     }
 
     async possible(observation: Observation): Promise<Consequences> {

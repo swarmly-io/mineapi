@@ -1,6 +1,7 @@
 import { Bot } from "mineflayer"
 import { IndexedData } from "minecraft-data"
 import { Consequences, Observation } from "../types"
+import { ActionDoResult } from "./types";
 
 export const DEFAULT_ALLOWED_DISTANCE = 16
 
@@ -15,12 +16,13 @@ export class Action<T> {
     options: T
 
     constructor(params: ActionParams<T>) {
-        this.bot = params.bot
-        this.mcData = params.mcData
-        this.options = params
+        let { bot, mcData, ...options} = params;
+        this.bot = bot
+        this.mcData = mcData
+        this.options = options as T
     }
 
-    async do(): Promise<any> {    
+    async do(): Promise<ActionDoResult> {    
         throw new Error('Cannot call do() on empty action')
     }
 

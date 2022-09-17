@@ -1,3 +1,4 @@
+import { IndexedData } from "minecraft-data"
 import { Bot } from "mineflayer"
 import { groupBy } from "underscore"
 import { Consequences, InventoryObservation, Observation } from "./types"
@@ -31,7 +32,8 @@ export const observe = async function(bot: Bot): Promise<Observation> {
             isRaining: bot.isRaining,
             thunderLevel: bot.thunderState
         },
-        closeEntities: Object.values(bot.entities).filter(x => x.position.distanceSquared(bot.entity.position) <= EntityMaxDistanceSquared),
+        closeEntities: [],// Object.values(bot.entities)
+                         //   .filter(x => x.position.distanceSquared(bot.entity.position) <= EntityMaxDistanceSquared),
         inventory: observeInventory(bot)
     }
 }
@@ -39,9 +41,11 @@ export const observe = async function(bot: Bot): Promise<Observation> {
 export const mergeWithConsequences = (observation: Observation, consequences: Consequences): Observation => {
     let merged = { ...observation }
     
+    if (consequences.success === false) return observation
+
     if (consequences.inventory !== undefined) {
         merged.inventory.items = Object.entries(consequences.inventory!)
-                                 .reduce((p, [k, v]) => (p[k] !== undefined ? p[k] += v : p[k] = v, p), observation.inventory.items)
+                                 .reduce((p, [k, v]) => (p[k] !== undefined ? p[k] += v : p[k] = v, p), merged.inventory.items)
     }
 
     if (consequences.time !== undefined) {
@@ -53,4 +57,26 @@ export const mergeWithConsequences = (observation: Observation, consequences: Co
     }
 
     return merged
+}
+
+export const prettyObservation = function(observation: Observation, mcData: IndexedData): Observation {
+    let pretty = { ...observation }
+    pretty.inventory = { ...observation.inventory }
+    //pretty.inventory.items = { ...observation.inventory.items }
+    pretty.closeEntities = [] // TODO: entities pollute the console, find a better way than to remove them
+    pretty.inventory.items = Object.fromEntries(Object.entries(pretty.inventory.items).map(([key, value]) => [mcData.items[key].name, value]))
+
+    return pretty
+}
+
+export const prettyConsequences = function(consequences: Consequences, mcData: IndexedData): Consequences {
+
+    let pretty = { ...consequences }
+    if (pretty.success === false) return pretty
+
+    if (pretty.inventory) {
+        pretty.inventory = Object.fromEntries(Object.entries(pretty.inventory!).map(([key, value]) => [mcData.items[key].name, value]))
+    }
+
+    return pretty
 }
