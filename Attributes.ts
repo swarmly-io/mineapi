@@ -8,9 +8,10 @@ import { mergeWithConsequences, observe, prettyConsequences, prettyObservation }
 import { TravelAction } from './actions/TravelAction'
 import { SleepAction } from './actions/SleepAction'
 import { PlaceAction, PlaceActionParams } from './actions/PlaceAction'
-import { plugin } from 'mineflayer-collectblock'
 import { FailedChainResult } from './types'
 import { Logger } from 'tslog'
+import { plugin as collectBlock } from 'mineflayer-collectblock'
+import { plugin as pvp } from 'mineflayer-pvp'
 
 const DEFAULT_ALLOWED_DISTANCE = 16
 export class Attributes {
@@ -25,9 +26,9 @@ export class Attributes {
         this.mcData = mcData
         this.actionOptions = { bot: bot, mcData: mcData }
         this.logger = logger
-        console.log(plugin)
-        this.bot.loadPlugin(plugin)
+        this.bot.loadPlugin(collectBlock)
         this.bot.loadPlugin(pathfinder)
+        this.bot.loadPlugin(pvp)
     }
 
     async canDo(actions: Action<any>[]): Promise<true | FailedChainResult> { // Returns true when all actions are possible, otherwise the index of the failing action
