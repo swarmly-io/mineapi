@@ -12,6 +12,7 @@ import { FailedChainResult } from './types'
 import { Logger } from 'tslog'
 import { plugin as collectBlock } from 'mineflayer-collectblock'
 import { plugin as pvp } from 'mineflayer-pvp'
+import { FightAction, FightActionParams } from './actions/FightAction'
 
 const DEFAULT_ALLOWED_DISTANCE = 16
 export class Attributes {
@@ -93,6 +94,10 @@ export class Attributes {
 
     place(params: PlaceActionParams) {
         return new PlaceAction({ ...this.actionOptions, ...params })
+    }
+
+    fight(params: FightActionParams) {
+        return new FightAction({ ...this.actionOptions, ...params })
     }
 
     // Crafting shortcuts

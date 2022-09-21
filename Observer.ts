@@ -32,8 +32,8 @@ export const observe = async function(bot: Bot): Promise<Observation> {
             isRaining: bot.isRaining,
             thunderLevel: bot.thunderState
         },
-        closeEntities: [],// Object.values(bot.entities)
-                         //   .filter(x => x.position.distanceSquared(bot.entity.position) <= EntityMaxDistanceSquared),
+        closeEntities: Object.values(bot.entities)
+                            .filter(x => x.position.distanceSquared(bot.entity.position) <= EntityMaxDistanceSquared),
         inventory: observeInventory(bot)
     }
 }

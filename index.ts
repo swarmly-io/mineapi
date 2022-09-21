@@ -6,6 +6,7 @@ import { ILogObject, Logger } from 'tslog'
 import { observe } from './Observer'
 import { MinecraftVersion } from './Config'
 import fs from 'fs'
+import { FightActionParams } from './actions/FightAction'
 
 let mcData = mcd(MinecraftVersion)
 
@@ -22,7 +23,7 @@ const writeLog = (log: ILogObject) => {
     }
     fs.appendFileSync('log.txt', JSON.stringify(obj, null, 2) + '\n')
 }
-const logger = new Logger()
+const logger = new Logger({ minLevel: "trace", suppressStdOutput: true })
 logger.attachTransport({
     silly: writeLog,
     debug: writeLog,
@@ -31,7 +32,7 @@ logger.attachTransport({
     warn: writeLog,
     error: writeLog,
     fatal: writeLog,
-}, "silly")
+}, "debug")
 
 const host = process.argv[2] || '127.0.0.1'
 const port = process.argv[3] || 25565
@@ -52,8 +53,6 @@ let chain = [attributes.collect_logs(3),
     attributes.craft({ itemIds: mcData.itemsArray.filter(x => x.name.endsWith('_planks') && !x.name.includes('warped') ).map(x => x.id), count: 12, allowWalking: false }),
     attributes.craft({ itemIds: mcData.itemsByName.stick.id, count: 4, allowWalking: false }),
     attributes.craft_axe()]
-
-i(mcData.items[701])
 
 let chain_craft_only = [
     attributes.craft_pickaxe()]
@@ -107,6 +106,12 @@ async function read() {
             } catch (e) {
                 console.log(e)
             }
+        }
+
+        if (cmd.includes("fight")) {
+            const [_, type, name] = cmd.split(" ")
+            const params = { entityName: name, entityType: type } as FightActionParams
+            attributes.tryDo([attributes.fight(params)])
         }
 
 
