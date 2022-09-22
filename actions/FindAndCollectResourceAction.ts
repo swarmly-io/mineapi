@@ -1,5 +1,4 @@
 import { Block } from 'prismarine-block'
-import { BlockNotFoundError } from "../errors/BlockNotFoundError"
 import { NotEnoughItemsError } from "../errors/NotEnoughItemsError"
 import { findBlocks } from "../helpers/EnvironmentHelper"
 import { assertHas } from "../helpers/InventoryHelper"
@@ -15,15 +14,11 @@ export type FindAndCollectParams = {
 
 export class FindAndCollectAction extends Action<FindAndCollectParams> {
 
-    //TODO: Maybe we should check if the bot has the tools
-    //      to mine the block type, and automatically equip 
-    //      the best tool to mine it
-    // - the collectblock plugin actually automatically selects the best tool
     constructor(params: ActionParams<FindAndCollectParams>) {
         super(params)
     }
 
-    async do(): Promise<ActionDoResult> { // TODO: Do we need metadata?        
+    async do(): Promise<ActionDoResult> { // TODO: Do we need metadata?     
         const blocks = findBlocks(this.bot, this.options.blockIds, this.options.allowedMaxDistance, this.options.amountToCollect)
 
         if (blocks.length === 0) {
@@ -31,13 +26,19 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
         }
 
         const targets: Block[] = []
+        let equiped = false
         for (let i = 0; i < Math.min(blocks.length, this.options.amountToCollect); i++) {
             let block = this.bot.blockAt(blocks[i])
-            if (block)
+            if (block) {
                 targets.push(block!)
+                if (!equiped) {
+                    await this.bot.tool.equipForBlock(block!, { getFromChest: true })
+                    equiped = true
+                }
+            }
         }
 
-        //@ts-ignore  ts doesnt know about mineflayer plugins
+        //@ts-ignore  ts doesnt know about mineflayer plugins        
         await this.bot.collectBlock.collect(targets)
 
         return true
@@ -49,7 +50,7 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
         let mineableBlockTypes = blockTypes.filter(blockType => {
             if (blockType.harvestTools !== undefined) {
                 try{
-                    assertHas(observation, 1, (i => Object.keys(blockType.harvestTools!).includes(i as string)))
+                    assertHas(observation, 1, (i => !blockType.harvestTools || Object.keys(blockType.harvestTools!).includes(i as string)))
                 } catch (e) {
                     if (e instanceof NotEnoughItemsError){
                         return false

@@ -12,6 +12,7 @@ import { FailedChainResult } from './types'
 import { Logger } from 'tslog'
 import { plugin as collectBlock } from 'mineflayer-collectblock'
 import { plugin as pvp } from 'mineflayer-pvp'
+import { plugin as tool } from 'mineflayer-tool'
 import { FightAction, FightActionParams } from './actions/FightAction'
 
 const DEFAULT_ALLOWED_DISTANCE = 16
@@ -30,6 +31,7 @@ export class Attributes {
         this.bot.loadPlugin(collectBlock)
         this.bot.loadPlugin(pathfinder)
         this.bot.loadPlugin(pvp)
+        this.bot.loadPlugin(tool)
     }
 
     async canDo(actions: Action<any>[]): Promise<true | FailedChainResult> { // Returns true when all actions are possible, otherwise the index of the failing action
