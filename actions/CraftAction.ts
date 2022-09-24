@@ -5,6 +5,7 @@ import { observeInventory } from "../Observer"
 import { Observation, Consequences, SuccessfulConsequences } from "../types"
 import { Action, ActionParams } from "./Action"
 import { ActionDoResult } from "./types"
+import { Block } from 'prismarine-block'
 
 export type CraftActionParams = {
     itemIds: number | number[],
@@ -21,18 +22,20 @@ export class CraftAction extends Action<CraftActionParams> {
     }
 
     async do(): Promise<ActionDoResult> {
-        let craftingTable = findBlock(this.bot, 
+        let craftingTablePos = findBlock(this.bot, 
             this.mcData.blocksByName.crafting_table.id, 
-            this.options.allowedMaxDistance !== undefined ? this.options.allowedMaxDistance : 6.0, 
-            this.bot.entity.position)
-        
+            this.options.allowedMaxDistance !== undefined ? this.options.allowedMaxDistance : 6.0)
+
+        let craftingTable: Block | null = null
+        if (craftingTablePos)
+            craftingTable = this.bot.blockAt(craftingTablePos)
 
         let itemIds = typeof this.options.itemIds === 'number' ? [this.options.itemIds] : this.options.itemIds
 
         let inventory = observeInventory(this.bot)
         let availableRecipes = itemIds.map(id => findRecipes(this.mcData, id, craftingTable !== null, inventory)).flat()
         if (availableRecipes.length === 0) 
-            return { reason: "Craft: Could not find recipe for item"}
+            return { reason: `Craft: Could not find recipe for item. Crafting table available: ${craftingTable !== null}`}
 
         let crafted = 0
         for (let i = 0; i < availableRecipes.length; i++) {
@@ -60,7 +63,7 @@ export class CraftAction extends Action<CraftActionParams> {
         let craftingTable = findBlock(this.bot, 
             this.mcData.blocksByName.crafting_table.id, 
             this.options.allowedMaxDistance !== undefined ? this.options.allowedMaxDistance : 6.0, 
-            observation.position)
+            observation)
 
         let itemIds = typeof this.options.itemIds === 'number' ? [this.options.itemIds] : this.options.itemIds
 
@@ -69,7 +72,7 @@ export class CraftAction extends Action<CraftActionParams> {
         let availableRecipes = itemIds.map(id => findRecipes(this.mcData, id, craftingTable !== null, inventory)).flat()
 
         if (availableRecipes.length === 0) {
-            return { success: false, reason: `Craft: Could not find a recipe, crafting table available: ${craftingTable !== null}`}
+            return { success: false, reason: `Craft: Could not find a recipe. Crafting table available: ${craftingTable !== null}`}
         }
 
         let crafted = 0

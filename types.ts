@@ -24,14 +24,16 @@ export interface Observation {
         thunderLevel: number,
     },
     closeEntities: Entity[],
-    inventory: InventoryObservation
+    inventory: InventoryObservation,
+    world: Record<number, number> // Used to track world modifications for future chain states
 }
 
 export interface SuccessfulConsequences {
     success: true,    
     inventory?: ItemsRecord,
     time?: number,
-    position?: Vec3
+    position?: Vec3,
+    world?: Record<number, number>
 }
 
 export interface UnsuccessfulConsequences {

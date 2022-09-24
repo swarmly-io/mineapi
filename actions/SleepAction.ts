@@ -34,12 +34,12 @@ export class SleepAction extends Action<SleepActionParams> {
             this.bot,
             this.mcData.blocksArray.filter(x => x.name.endsWith('_bed')).map(x => x.id),
             this.options.allowedMaxDistance!,
-            observation.position
+            observation
         )
         if (block === null) 
             return { success: false, reason: 'Sleep: No bed found' }
 
-        return { success: true, time: 0, position: block.position }
+        return { success: true, time: 0, position: block }
     }
     
     async do(): Promise<ActionDoResult> {
@@ -48,10 +48,10 @@ export class SleepAction extends Action<SleepActionParams> {
             this.bot,
             this.mcData.blocksArray.filter(x => x.name.endsWith('_bed')).map(x => x.id),
             this.options.allowedMaxDistance!)
-        if (block === null) {
+        if (block === undefined) {
             return { reason: "Sleep: Could not find bed." }
         }
-        await this.bot.sleep(block)
+        await this.bot.sleep(this.bot.blockAt(block)!)
         
         return true
     }

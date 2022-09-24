@@ -1,9 +1,25 @@
 import { IndexedData } from "minecraft-data"
 import { Bot } from "mineflayer"
+import { Vec3 } from 'vec3';
 import { groupBy } from "underscore"
 import { Consequences, InventoryObservation, Observation } from "./types"
 
 const EntityMaxDistanceSquared = Math.pow(32, 2) 
+
+// https://wiki.vg/Protocol#Position
+export const vec2key = function(vec: Vec3): number {
+    return ((vec.x & 0x3FFFFFF) << 38) | ((vec.z & 0x3FFFFFF) << 12) | (vec.y & 0xFFF)
+}
+
+export const key2vec = function(key: number): Vec3 {
+    let x = Math.floor(key / Math.pow(2, 38));
+    let y = key & 0xFFF
+    let z = Math.floor((key / Math.pow(2, 12)) & 0x3FFFFFF);
+    if (x >= 1 << 25) { x -= Math.pow(2, 26) }
+    if (y >= 1 << 11) { y -= Math.pow(2, 12) }
+    if (z >= 1 << 25) { z -= Math.pow(2, 26) }
+    return new Vec3(x, y, z)
+}
 
 export const observeInventory = function(bot: Bot): InventoryObservation {
     // returns a dictionary with item id's as keys and the number of items as the value
@@ -32,9 +48,10 @@ export const observe = async function(bot: Bot): Promise<Observation> {
             isRaining: bot.isRaining,
             thunderLevel: bot.thunderState
         },
-        closeEntities: Object.values(bot.entities)
-                            .filter(x => x.position.distanceSquared(bot.entity.position) <= EntityMaxDistanceSquared),
-        inventory: observeInventory(bot)
+        closeEntities:  Object.values(bot.entities)
+                              .filter(x => x.position.distanceSquared(bot.entity.position) <= EntityMaxDistanceSquared),
+        inventory: observeInventory(bot),
+        world: {}
     }
 }
 
@@ -56,6 +73,10 @@ export const mergeWithConsequences = (observation: Observation, consequences: Co
         merged.position = consequences.position!
     }
 
+    if (consequences.world !== undefined) {
+        merged.world = Object.entries(consequences.world).reduce((p, [k, v]) => (p[k] = v, p), observation.world)
+    }
+
     return merged
 }
 
@@ -65,6 +86,8 @@ export const prettyObservation = function(observation: Observation, mcData: Inde
     //pretty.inventory.items = { ...observation.inventory.items }
     pretty.closeEntities = [] // TODO: entities pollute the console, find a better way than to remove them
     pretty.inventory.items = Object.fromEntries(Object.entries(pretty.inventory.items).map(([key, value]) => [mcData.items[key].name, value]))
+    //@ts-ignore
+    pretty.world = Object.fromEntries(Object.entries(pretty.world).map(([key, value]) => [key2vec(key), mcData.blocks[value].name]))
 
     return pretty
 }
@@ -76,6 +99,10 @@ export const prettyConsequences = function(consequences: Consequences, mcData: I
 
     if (pretty.inventory) {
         pretty.inventory = Object.fromEntries(Object.entries(pretty.inventory!).map(([key, value]) => [mcData.items[key].name, value]))
+    }
+    if (pretty.world) {
+        //@ts-ignore
+        pretty.world = Object.fromEntries(Object.entries(pretty.world).map(([key, value]) => [key2vec(key), mcData.blocks[value].name]))
     }
 
     return pretty

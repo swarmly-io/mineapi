@@ -15,6 +15,8 @@ import { plugin as pvp } from 'mineflayer-pvp'
 import { plugin as tool } from 'mineflayer-tool'
 import { FightAction, FightActionParams } from './actions/FightAction'
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 const DEFAULT_ALLOWED_DISTANCE = 16
 export class Attributes {
 
@@ -56,7 +58,7 @@ export class Attributes {
             observation = mergeWithConsequences(observation, result)
         }
 
-        this.logger.debug(`Chain is possible.`, { endState: observation })
+        this.logger.debug(`Chain is possible.`, { endState: prettyObservation(observation, this.mcData) })
 
         return true
     }
@@ -75,12 +77,13 @@ export class Attributes {
             this.logger.debug(`Executing action ${i} (${action.constructor.name})`, {params: action.options})
             let actionResult = await action.do() 
             if (true !== actionResult) {
-                this.logger.error(`Action ${i} (${action.constructor.name}) failed`, {result: actionResult})
+                this.logger.error(`Action ${i} (${action.constructor.name}) failed`, {result: actionResult}, { currentEnv: prettyObservation(await observe(this.bot), this.mcData) })
                 return {
                     index: i,
                     reason: `${actionResult.reason}`
                 }
             }
+            await sleep(500) // TODO: Maybe don't pause after every action, but only when needed (f.e. collected items from findAndCollect action may not be in the inventory yet.)
         }
 
         return true
@@ -104,7 +107,7 @@ export class Attributes {
 
     // Crafting shortcuts
     craft_table = () => new CraftAction({ ...this.actionOptions, itemIds: this.mcData.itemsByName.crafting_table.id, count: 1 })
-    place_table = () => new PlaceAction({ ...this.actionOptions, itemId: this.mcData.itemsByName.crafting_table.id, count: 1 })
+    place_table = () => new PlaceAction({ ...this.actionOptions, itemId: this.mcData.itemsByName.crafting_table.id })
     craft_pickaxe = () => new CraftAction({ ...this.actionOptions, itemIds: this.mcData.itemsByName.wooden_pickaxe.id, count: 1 })
     craft_axe = () => new CraftAction({ ...this.actionOptions, itemIds: this.mcData.itemsByName.wooden_axe.id, count: 1 })
 

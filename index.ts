@@ -3,7 +3,7 @@ import mineflayer from "mineflayer"
 import mcd from 'minecraft-data'
 import readline from 'readline'
 import { ILogObject, Logger } from 'tslog'
-import { observe } from './Observer'
+import { observe, prettyObservation } from './Observer'
 import { MinecraftVersion } from './Config'
 import fs from 'fs'
 import { FightActionParams } from './actions/FightAction'
@@ -49,10 +49,17 @@ const bot = mineflayer.createBot({
 
 const attributes = new Attributes(bot, mcData, logger)
 var i = (x) => { console.log('inspect',x); return x; }
-let chain = [attributes.collect_logs(3), 
-    attributes.craft({ itemIds: mcData.itemsArray.filter(x => x.name.endsWith('_planks') && !x.name.includes('warped') ).map(x => x.id), count: 12, allowWalking: false }),
-    attributes.craft({ itemIds: mcData.itemsByName.stick.id, count: 4, allowWalking: false }),
-    attributes.craft_axe()]
+let chain = [
+    attributes.collect_logs(3),
+    attributes.craft({ itemIds: mcData.itemsArray.filter(x => x.name.endsWith("_planks")).map(x => x.id), count: 12 }),
+    attributes.craft_table(),
+    attributes.place_table(),
+    attributes.craft({itemIds: mcData.itemsByName.stick.id, count: 4}),
+    attributes.craft_pickaxe(),
+    attributes.findAndCollectResource({ blockIds: mcData.blocksByName.stone.id, amountToCollect: 10, allowedMaxDistance: 32 }),
+    attributes.craft({ itemIds: mcData.itemsByName.stone_pickaxe.id, count: 1 }),
+    attributes.findAndCollectResource({ blockIds: mcData.blocksByName.iron_ore.id, amountToCollect: 3, allowedMaxDistance: 64 })
+]
 
 let chain_craft_only = [
     attributes.craft_pickaxe()]
@@ -67,7 +74,7 @@ async function read() {
     })
     reader.question(`please input a command \n`, async cmd => {
         if (cmd === 'observe') {
-            observe(bot).then(x => console.log(x))
+            observe(bot).then(x => console.log(prettyObservation(x, mcData)))
         }
         if (cmd == 'chain possible') {
             attributes.canDo(chain).then(x => {
