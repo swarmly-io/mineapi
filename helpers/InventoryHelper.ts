@@ -4,6 +4,8 @@ import { Observation } from '../types'
 export const assertHas = (observation: Observation, count: number, itemFilter: number | string | ((itemId: number | string) => boolean)) => {
     let itemCount = 0
 
+    console.log(observation.inventory)
+    console.log(itemFilter)
     if (typeof itemFilter === 'number' || typeof itemFilter === 'string') {
         itemCount = observation.inventory.items[itemFilter] ?? 0
     } else if (typeof itemFilter === 'function') {

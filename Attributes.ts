@@ -14,6 +14,7 @@ import { plugin as collectBlock } from 'mineflayer-collectblock'
 import { plugin as pvp } from 'mineflayer-pvp'
 import { plugin as tool } from 'mineflayer-tool'
 import { FightAction, FightActionParams } from './actions/FightAction'
+import { BuildSchematicAction, BuildSchematicParams } from './actions/BuildSchematicAction'
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -103,6 +104,10 @@ export class Attributes {
 
     fight(params: FightActionParams) {
         return new FightAction({ ...this.actionOptions, ...params })
+    }
+
+    build_schematic(params: BuildSchematicParams) {
+        return new BuildSchematicAction({ ...this.actionOptions, ...params })
     }
 
     // Crafting shortcuts

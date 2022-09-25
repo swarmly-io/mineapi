@@ -25,6 +25,7 @@
     "mineflayer-tool": "^1.2.0",
     "nodemon": "^2.0.15",
     "prismarine-recipe": "^1.2.0",
+    "prismarine-schematic": "^1.2.3",
     "prismarine-viewer": "^1.21.0",
     "ts-node": "^10.9.1",
     "tslog": "^3.3.4",
