@@ -7,6 +7,9 @@ import { observe, prettyObservation } from './Observer'
 import { MinecraftVersion } from './Config'
 import fs from 'fs'
 import { FightActionParams } from './actions/FightAction'
+import { BuildSchematicAction } from './actions/BuildSchematicAction'
+import { Schematic } from 'prismarine-schematic'
+import { Vec3 } from 'vec3'
 
 let mcData = mcd(MinecraftVersion)
 
@@ -74,7 +77,7 @@ async function read() {
     })
     reader.question(`please input a command \n`, async cmd => {
         if (cmd === 'observe') {
-            observe(bot).then(x => console.log(prettyObservation(x, mcData)))
+            observe(bot).then(x => console.log(x))
         }
         if (cmd == 'chain possible') {
             attributes.canDo(chain).then(x => {
@@ -119,6 +122,15 @@ async function read() {
             const [_, type, name] = cmd.split(" ")
             const params = { entityName: name, entityType: type } as FightActionParams
             attributes.tryDo([attributes.fight(params)])
+        }
+
+        if (cmd === "build") {
+            let schematic = await Schematic.read(fs.readFileSync('small_house.schem'), MinecraftVersion)
+            schematic.offset = new Vec3(0, 0, 0)
+            attributes.tryDo([attributes.build_schematic({
+                schematic: schematic,
+                position: bot.entity.position.floored()
+            })])
         }
 
 
