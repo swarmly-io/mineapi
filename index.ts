@@ -124,11 +124,12 @@ async function read() {
             attributes.tryDo([attributes.fight(params)])
         }
 
-        if (cmd === "build house") {
-            let schematic = await Schematic.read(fs.readFileSync('creeper.schem'), MinecraftVersion)
-            schematic.offset = new Vec3(0, 100, 0)
+        if (cmd === "build") {
+            let schematic = await Schematic.read(fs.readFileSync('small_house.schem'), MinecraftVersion)
+            schematic.offset = new Vec3(0, 0, 0)
             attributes.tryDo([attributes.build_schematic({
                 schematic: schematic,
+                position: bot.entity.position.floored()
             })])
         }
 
