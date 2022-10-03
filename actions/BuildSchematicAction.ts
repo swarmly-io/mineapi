@@ -66,9 +66,7 @@ export class BuildSchematicAction extends Action<BuildSchematicParams> {
     async do(): Promise<ActionDoResult> {
         while (this.build.actions.length > 0) {
         const actions = this.build.getAvailableActions()
-        console.log(`${actions.length} available actions`)
         if (actions.length === 0) {
-            console.log('No actions to perform')
             break
         }
         actions.sort((a, b) => {
@@ -77,22 +75,14 @@ export class BuildSchematicAction extends Action<BuildSchematicParams> {
             return dA - dB
         })
         const action = actions[0]
-        console.log('action', action)
-
         try {
             if (action.type === 'place') {
                 const item = this.build.getItemForState(action.state)
-                console.log('Selecting ' + item.displayName)
 
                 const properties = this.build.properties[action.state]
                 const half = properties.half ? properties.half : properties.type
 
                 const faces = this.build.getPossibleDirections(action.state, action.pos)
-                for (const face of faces) {
-                    const block = this.bot.blockAt(action.pos.plus(face))
-                    //@ts-ignore
-                    console.log(face, action.pos.plus(face), block.name)
-                }
 
                 const { facing, is3D } = this.build.getFacing(action.state, properties.facing)
                 const goal = new goals.GoalPlaceBlock(action.pos, this.bot.world, {
@@ -105,7 +95,6 @@ export class BuildSchematicAction extends Action<BuildSchematicParams> {
 
                 //@ts-ignore
                 if (!goal.isEnd(this.bot.entity.position.floored())) {
-                    console.log('pathfinding')
                     this.bot.pathfinder.setMovements(this.movements)
                     await this.bot.pathfinder.goto(goal)
                 }
@@ -113,7 +102,6 @@ export class BuildSchematicAction extends Action<BuildSchematicParams> {
                 try{
                     await this.equipItem(item.id) // equip item after pathfinder
                 } catch (e: any) {
-                    console.log(e)
                     return { reason: e.toString() }
                 }
 
@@ -133,10 +121,6 @@ export class BuildSchematicAction extends Action<BuildSchematicParams> {
                 if (sneak) this.bot.setControlState('sneak', false)
 
                 const block = this.bot.world.getBlock(action.pos)
-                if (block.stateId !== action.state) {
-                    console.log('expected', properties)
-                    console.log('got', block.getProperties())
-                }
             }
         } catch (e) {
             console.log(e)
