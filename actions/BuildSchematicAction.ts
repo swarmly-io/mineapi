@@ -6,10 +6,9 @@ import { NotEnoughItemsError } from "../errors/NotEnoughItemsError";
 import { ActionDoResult } from "./types";
 import { Vec3 } from 'vec3'
 import { Build } from 'mineflayer-builder'
-import interactable from 'mineflayer-builder/lib/interactable.json';
 import { goals, Movements, pathfinder } from 'mineflayer-pathfinder';
 
-import { Block } from 'prismarine-block'
+import interactable from 'mineflayer-builder/lib/interactable.json';
 
 export type BuildSchematicParams = {
     schematic: Schematic,
@@ -65,68 +64,75 @@ export class BuildSchematicAction extends Action<BuildSchematicParams> {
 
     async do(): Promise<ActionDoResult> {
         while (this.build.actions.length > 0) {
-        const actions = this.build.getAvailableActions()
-        if (actions.length === 0) {
-            break
-        }
-        actions.sort((a, b) => {
-            const dA = a.pos.offset(0.5, 0.5, 0.5).distanceSquared(this.bot.entity.position)
-            const dB = b.pos.offset(0.5, 0.5, 0.5).distanceSquared(this.bot.entity.position)
-            return dA - dB
-        })
-        const action = actions[0]
-        try {
-            if (action.type === 'place') {
-                const item = this.build.getItemForState(action.state)
 
-                const properties = this.build.properties[action.state]
-                const half = properties.half ? properties.half : properties.type
-
-                const faces = this.build.getPossibleDirections(action.state, action.pos)
-
-                const { facing, is3D } = this.build.getFacing(action.state, properties.facing)
-                const goal = new goals.GoalPlaceBlock(action.pos, this.bot.world, {
-                    faces,
-                    facing: facing,
-                    //@ts-ignore
-                    facing3D: is3D,
-                    half
-                })
-
-                //@ts-ignore
-                if (!goal.isEnd(this.bot.entity.position.floored())) {
-                    this.bot.pathfinder.setMovements(this.movements)
-                    await this.bot.pathfinder.goto(goal)
+            if (this.isCanceled) {
+                return {
+                    reason: "Action has been cancelled."
                 }
-
-                try{
-                    await this.equipItem(item.id) // equip item after pathfinder
-                } catch (e: any) {
-                    return { reason: e.toString() }
-                }
-
-                // TODO: const faceAndRef = goal.getFaceAndRef(bot.entity.position.offset(0, 1.6, 0))
-                //@ts-ignore
-                const faceAndRef = goal.getFaceAndRef(this.bot.entity.position.floored().offset(0.5, 1.6, 0.5))
-                if (!faceAndRef) { throw new Error('no face and ref') }
-
-                await this.bot.lookAt(faceAndRef.to, true)
-
-                const refBlock = this.bot.blockAt(faceAndRef.ref)
-                const sneak = interactable.indexOf(refBlock!.name) > 0
-                const delta = faceAndRef.to.minus(faceAndRef.ref)
-                if (sneak) this.bot.setControlState('sneak', true)
-                //@ts-ignore
-                await this.bot._placeBlockWithOptions(refBlock, faceAndRef.face.scaled(-1), { half, delta })
-                if (sneak) this.bot.setControlState('sneak', false)
-
-                const block = this.bot.world.getBlock(action.pos)
             }
-        } catch (e) {
-            console.log(e)
-        }
 
-        this.build.removeAction(action)
+            const actions = this.build.getAvailableActions()
+            if (actions.length === 0) {
+                break
+            }
+            actions.sort((a, b) => {
+                const dA = a.pos.offset(0.5, 0.5, 0.5).distanceSquared(this.bot.entity.position)
+                const dB = b.pos.offset(0.5, 0.5, 0.5).distanceSquared(this.bot.entity.position)
+                return dA - dB
+            })
+            const action = actions[0]
+            try {
+                if (action.type === 'place') {
+                    const item = this.build.getItemForState(action.state)
+
+                    const properties = this.build.properties[action.state]
+                    const half = properties.half ? properties.half : properties.type
+
+                    const faces = this.build.getPossibleDirections(action.state, action.pos)
+
+                    const { facing, is3D } = this.build.getFacing(action.state, properties.facing)
+                    const goal = new goals.GoalPlaceBlock(action.pos, this.bot.world, {
+                        faces,
+                        facing: facing,
+                        //@ts-ignore
+                        facing3D: is3D,
+                        half
+                    })
+
+                    //@ts-ignore
+                    if (!goal.isEnd(this.bot.entity.position.floored())) {
+                        this.bot.pathfinder.setMovements(this.movements)
+                        await this.bot.pathfinder.goto(goal)
+                    }
+
+                    try{
+                        await this.equipItem(item.id) // equip item after pathfinder
+                    } catch (e: any) {
+                        return { reason: e.toString() }
+                    }
+
+                    // TODO: const faceAndRef = goal.getFaceAndRef(bot.entity.position.offset(0, 1.6, 0))
+                    //@ts-ignore
+                    const faceAndRef = goal.getFaceAndRef(this.bot.entity.position.floored().offset(0.5, 1.6, 0.5))
+                    if (!faceAndRef) { throw new Error('no face and ref') }
+
+                    await this.bot.lookAt(faceAndRef.to, true)
+
+                    const refBlock = this.bot.blockAt(faceAndRef.ref)
+                    const sneak = interactable.indexOf(refBlock!.name) > 0
+                    const delta = faceAndRef.to.minus(faceAndRef.ref)
+                    if (sneak) this.bot.setControlState('sneak', true)
+                    //@ts-ignore
+                    await this.bot._placeBlockWithOptions(refBlock, faceAndRef.face.scaled(-1), { half, delta })
+                    if (sneak) this.bot.setControlState('sneak', false)
+
+                    const block = this.bot.world.getBlock(action.pos)
+                }
+            } catch (e) {
+                console.log(e)
+            }
+
+            this.build.removeAction(action)
         }
 
         return true

@@ -19,7 +19,13 @@ export class FightAction extends Action<FightActionParams> {
 
         const entity = await this.nearestEntity(entityName, entityType)
         console.log(entity)
-        this.bot.pvp.attack(entity as unknown as Entity)
+
+        if (this.isCanceled) {
+            return {
+                reason: "Action has been cancelled."
+            }
+        }
+        await this.bot.pvp.attack(entity as unknown as Entity)
         
         return true
     }

@@ -15,8 +15,9 @@ import { plugin as pvp } from 'mineflayer-pvp'
 import { plugin as tool } from 'mineflayer-tool'
 import { FightAction, FightActionParams } from './actions/FightAction'
 import { BuildSchematicAction, BuildSchematicParams } from './actions/BuildSchematicAction'
-
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+import {ChainAction} from "./actions/ChainAction";
+import {NotPossibleError} from "./errors/NotPossibleError";
+import {ActionDoResult} from "./actions/types";
 
 const DEFAULT_ALLOWED_DISTANCE = 16
 export class Attributes {
@@ -29,65 +30,16 @@ export class Attributes {
     constructor(bot: Bot, mcData: IndexedData, logger: Logger) {
         this.bot = bot
         this.mcData = mcData
-        this.actionOptions = { bot: bot, mcData: mcData }
         this.logger = logger
+        this.actionOptions = { bot: bot, mcData: mcData, logger: logger }
         this.bot.loadPlugin(collectBlock)
         this.bot.loadPlugin(pathfinder)
         this.bot.loadPlugin(pvp)
         this.bot.loadPlugin(tool)
     }
 
-    async canDo(actions: Action<any>[]): Promise<true | FailedChainResult> { // Returns true when all actions are possible, otherwise the index of the failing action
-
-        this.logger.debug(`Testing chain: [${actions.map(x => x.constructor.name)}]`)
-        let observation = await observe(this.bot)
-
-        for (let i = 0; i < actions.length; i++) {
-            let action = actions[i]           
-            this.logger.debug(`Testing action ${i} (${action.constructor.name})`, { params: action.options, observation: prettyObservation(observation, this.mcData) })
-
-            let result = await action.possible(observation)
-            if (!result.success) {
-                this.logger.warn(`Chain not possible. Action ${i} (${action.constructor.name}) failed: '${result.reason}'`)
-                return {
-                    index: i,
-                    reason: result.reason
-                }
-            }
-            this.logger.debug(`Action ${i} (${action.constructor.name}) possible`, { result: prettyConsequences(result, this.mcData), observation: observation })
-            //merge the consequences of previous action with the consequences
-            observation = mergeWithConsequences(observation, result)
-        }
-
-        this.logger.debug(`Chain is possible.`, { endState: prettyObservation(observation, this.mcData) })
-
-        return true
-    }
-
-    async tryDo(actions: Action<any>[]): Promise<true | FailedChainResult> {
-
-        this.logger.debug(`Trying to do chain: [${actions.map(x => x.constructor.name)}]`)
-        let result = await this.canDo(actions)
-        if (true !== result) {
-            this.logger.error(`Chain not possible`, {result: result})
-            return result
-        }
-
-        for (let i = 0; i < actions.length; i++) {
-            let action = actions[i]
-            this.logger.debug(`Executing action ${i} (${action.constructor.name})`, {params: action.options})
-            let actionResult = await action.do() 
-            if (true !== actionResult) {
-                this.logger.error(`Action ${i} (${action.constructor.name}) failed`, {result: actionResult}, { currentEnv: prettyObservation(await observe(this.bot), this.mcData) })
-                return {
-                    index: i,
-                    reason: `${actionResult.reason}`
-                }
-            }
-            await sleep(500) // TODO: Maybe don't pause after every action, but only when needed (f.e. collected items from findAndCollect action may not be in the inventory yet.)
-        }
-
-        return true
+    chain (...actions: Action<any>[]) {
+        return new ChainAction({...this.actionOptions, actions: actions })
     }
 
     findAndCollectResource(params: FindAndCollectActionParams) {

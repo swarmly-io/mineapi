@@ -39,6 +39,11 @@ export class CraftAction extends Action<CraftActionParams> {
 
         let crafted = 0
         for (let i = 0; i < availableRecipes.length; i++) {
+            if (this.isCanceled) {
+                return {
+                    reason: "Action has been cancelled."
+                }
+            }
             let recipe = availableRecipes[i]
             let maxCount = Math.ceil((this.options.count! - crafted) / recipe.resultCount)
             let count = Math.min(maxCount, craftableAmount(recipe, inventory))

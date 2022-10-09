@@ -80,9 +80,9 @@ async function read() {
             observe(bot).then(x => console.log(x))
         }
         if (cmd == 'chain possible') {
-            attributes.canDo(chain).then(x => {
-                if (true !== x) {
-                    console.log(`Chain not possible: Task ${x.index + 1} fails with reason '${x.reason}'`)
+            attributes.chain(...chain).possible(await observe(bot)).then(x => {
+                if (!x.success) {
+                    console.log(`Chain not possible. Reason '${x.reason}'`)
                 } else {
                     console.log("Chain is possible")
                 }
@@ -90,9 +90,9 @@ async function read() {
         }
         if (cmd === 'execute chain') {
             try {
-                attributes.tryDo(chain).then(res => {
-                    console.log("Done")
-                })
+                attributes.chain(...chain).do()
+                    .then(res => console.log("Done"))
+                    .catch(e => console.log(e));
             } catch (e) {
                 console.log(e)
             }
@@ -100,8 +100,9 @@ async function read() {
 
         if (cmd === 'execute chain table') {
             try {
-                attributes.tryDo(chain_craft_only).then(res => {
-                    console.log("Done")
+                attributes.chain(...chain_craft_only).do()
+                    .then(res => {
+                        console.log("Done")
                 })
             } catch (e) {
                 console.log(e)
@@ -110,8 +111,9 @@ async function read() {
 
         if (cmd === 'place table') {
             try {
-                attributes.tryDo(chain_table_only).then(res => {
-                    console.log("Done")
+                attributes.chain(...chain_table_only).do()
+                    .then(res => {
+                        console.log("Done")
                 })
             } catch (e) {
                 console.log(e)
@@ -121,18 +123,21 @@ async function read() {
         if (cmd.includes("fight")) {
             const [_, type, name] = cmd.split(" ")
             const params = { entityName: name, entityType: type } as FightActionParams
-            attributes.tryDo([attributes.fight(params)])
+
+            attributes.chain(attributes.fight(params)).do()
+                .then(() => console.log("Done"))
         }
 
         if (cmd === "build") {
             let schematic = await Schematic.read(fs.readFileSync('small_house.schem'), MinecraftVersion)
             schematic.offset = new Vec3(0, 0, 0)
-            attributes.tryDo([attributes.build_schematic({
+            attributes.build_schematic({
                 schematic: schematic,
                 position: bot.entity.position.floored()
-            })])
+            }).do()
+                .then(() => console.log("Done"))
+                .catch((e) => console.log(e))
         }
-
 
 
           if (cmd == "make an axe") {

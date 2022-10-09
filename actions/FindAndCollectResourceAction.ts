@@ -40,8 +40,14 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
             }
         }
 
+        if (this.isCanceled) {
+            return {
+                reason: "Action has been cancelled."
+            }
+        }
+
         //@ts-ignore  ts doesnt know about mineflayer plugins        
-        await this.bot.collectBlock.collect(targets)
+        await this.bot.collectBlock.collect(targets) // TODO:
         return true
     }
 
