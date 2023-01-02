@@ -37,7 +37,8 @@ export class Attributes {
         this.bot.loadPlugin(tool)
     }
 
-    async canDo(actions: Action<any>[]): Promise<true | FailedChainResult> { // Returns true when all actions are possible, otherwise the index of the failing action
+    // Returns true when all actions are possible, otherwise the index of the failing action
+    async canDo(actions: Action<any>[]): Promise<true | FailedChainResult> { 
 
         this.logger.debug(`Testing chain: [${actions.map(x => x.constructor.name)}]`)
         let observation = await observe(this.bot)

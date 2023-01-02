@@ -40,8 +40,13 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
             }
         }
 
-        //@ts-ignore  ts doesnt know about mineflayer plugins        
-        await this.bot.collectBlock.collect(targets)
+        try {
+            //@ts-ignore  ts doesnt know about mineflayer plugins        
+            await this.bot.collectBlock.collect(targets)
+        } catch(e) {
+            console.log("Error in collect", e)
+            throw e
+        }
         return true
     }
 

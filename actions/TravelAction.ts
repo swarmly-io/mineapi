@@ -14,7 +14,12 @@ export class TravelAction extends Action<TravelActionParams> {
     }
 
     async do(): Promise<ActionDoResult> {
-        await this.bot.pathfinder.goto(this.options.goal)
+        try {
+            await this.bot.pathfinder.goto(this.options.goal)
+        } catch(e) {
+            console.log("Error in travel", e)
+            throw e
+        }
 
         return true
     }

@@ -7,35 +7,11 @@ import { observe, prettyObservation } from './Observer'
 import { MinecraftVersion } from './Config'
 import fs from 'fs'
 import { FightActionParams } from './actions/FightAction'
-import { BuildSchematicAction } from './actions/BuildSchematicAction'
 import { Schematic } from 'prismarine-schematic'
 import { Vec3 } from 'vec3'
+import { logger } from './log'
 
 let mcData = mcd(MinecraftVersion)
-
-if (fs.existsSync('log.txt')) { // remove log file
-    fs.unlinkSync('log.txt')
-}
-
-const writeLog = (log: ILogObject) => {
-    let obj = {
-        date: log.date,
-        level: log.logLevel,
-        file: `${log.fileName}:${log.lineNumber}`,
-        message: log.argumentsArray
-    }
-    fs.appendFileSync('log.txt', JSON.stringify(obj, null, 2) + '\n')
-}
-const logger = new Logger({ minLevel: "trace", suppressStdOutput: true })
-logger.attachTransport({
-    silly: writeLog,
-    debug: writeLog,
-    trace: writeLog,
-    info: writeLog,
-    warn: writeLog,
-    error: writeLog,
-    fatal: writeLog,
-}, "debug")
 
 const host = process.argv[2] || '127.0.0.1'
 const port = process.argv[3] || 25565
@@ -132,8 +108,6 @@ async function read() {
                 position: bot.entity.position.floored()
             })])
         }
-
-
 
           if (cmd == "make an axe") {
               // todo, should be able to find any type of wood

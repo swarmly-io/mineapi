@@ -11,6 +11,7 @@ export type IngredientRecipe = {
     ingredients: Record<number, number>,
     resultCount: number,
     mineflayerRecipe: PrismarineRecipe
+    ingredientLookup?: { [id: number]: string}
 }
 
 export const recipeItemToId = (item: RecipeItem): number => {
@@ -29,7 +30,7 @@ export const parseRecipe = (recipe: Recipe): IngredientRecipe => {
     let requiresTable = true
     let ingredients: number[]
     // @ts-ignore
-    if (recipe.inShape !== undefined) {
+    if (!!recipe.inShape) {
         let shapedRecipe = recipe as ShapedRecipe
 
         if (shapedRecipe.inShape.length <= 2){
