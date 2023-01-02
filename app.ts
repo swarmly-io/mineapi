@@ -3,6 +3,7 @@ import { BotService } from './bot_api';
 import mcd from 'minecraft-data';
 import { MinecraftVersion } from './Config';
 import { SearchData, searchMcData } from './helpers/McDataHelper';
+import { TravelGoal, createGoal } from './helpers/TravelHelper'
 
 const app = express();
 const port = 3000;
@@ -66,10 +67,19 @@ app.get("/state/:name", async (req, res) => {
     res.send(await bot.get_agent_state())
 })
 
+app.get("/players/:name", (req, res) => {
+    const bot = getBot(req.params.name)
+    res.send(bot.bot.players)
+})
+
 app.post("/search/", async (req, res) => {
     const params = req.body as SearchData
-    mcData
     res.send(searchMcData(mcData, params))
+})
+
+app.post('/makeGoal/', async (req, res) => {
+    const params = req.body as TravelGoal
+    res.send(createGoal(params))
 })
 
 app.listen(port, () => {
@@ -84,3 +94,5 @@ function getBot(name: string) {
     }
     return bot;
 }
+
+

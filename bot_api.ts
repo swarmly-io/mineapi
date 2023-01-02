@@ -1,4 +1,4 @@
-import mineflayer from "mineflayer"
+import mineflayer, { Bot } from "mineflayer"
 import { Attributes } from "./Attributes";
 import { MinecraftVersion } from "./Config";
 import mcd from 'minecraft-data'
@@ -80,7 +80,7 @@ export class BotService {
     host: string = "localhost"
     name: string = "McBot"
 
-    bot: any
+    bot: Bot
     attributes: Attributes | null = null
     id: any
     actions: any[] = []
@@ -139,7 +139,6 @@ export class BotService {
 
     reset() {
         this.bot.quit()
-        this.bot = null;
         this.attributes = null;
         return new BotService(this.port, this.host, this.name)
     }
