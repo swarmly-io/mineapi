@@ -18,14 +18,14 @@ let mcData = mcd(MinecraftVersion)
 
 type ActionParams = CraftActionParams | FightActionParams | FindAndCollectParams | PlaceActionParams | SleepActionParams | TravelActionParams
 
-interface CallbackInfo {
+export interface CallbackInfo {
     typeName: string
     params: ActionParams
     continueOnFailure: boolean
     callback?: Action<any>
 }
 
-interface Task {
+export interface Task {
     id: string
     status?: true | FailedChainResult
     message?: string
@@ -73,6 +73,12 @@ class TaskRunner {
     async status(task: Task) {
         // todo
     }
+}
+
+export interface InitBot {
+    port: string
+    host: string
+    name: string
 }
 
 export class BotService {

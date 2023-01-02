@@ -1,9 +1,10 @@
 import express from 'express';
-import { BotService } from './bot_api';
+import { BotService, InitBot } from './bot_api';
 import mcd from 'minecraft-data';
 import { MinecraftVersion } from './Config';
 import { SearchData, searchMcData } from './helpers/McDataHelper';
 import { TravelGoal, createGoal } from './helpers/TravelHelper'
+import { Example, StartExample } from './example';
 
 const app = express();
 const port = 3000;
@@ -17,7 +18,7 @@ app.get('/', (req, res) => {
 });
 
 app.post('/', (req, res) => {
-    const params = req.body
+    const params = req.body as InitBot
     if (bots[params.name]) {
         throw new Error("Already created")
     }
@@ -82,10 +83,16 @@ app.post('/makeGoal/', async (req, res) => {
     res.send(createGoal(params))
 })
 
+app.post('/example',async (req, res) => {
+   const params = req.body as StartExample
+   const example = new Example(params, mcData)
+   await example.run()
+   res.send({ "message": params.type + " example running!" })
+})
+
 app.listen(port, () => {
   return console.log(`http://localhost:${port}`);
 });
-
 
 function getBot(name: string) {
     const bot = bots[name];
