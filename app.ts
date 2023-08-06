@@ -20,7 +20,8 @@ app.get('/', (req, res) => {
 app.post('/', (req, res) => {
     const params = req.body as InitBot
     if (bots[params.name]) {
-        throw new Error("Already created")
+        bots[params.name].reset()
+        res.send({ botId: bots[params.name].id, name: params.name });
     }
 
     let bot = new BotService(params.port, params.host, params.name)

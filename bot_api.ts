@@ -144,7 +144,11 @@ export class BotService {
     }
 
     reset() {
-        this.bot.quit()
+        try {
+            this.bot.quit()
+        } catch(e) {
+            console.log(e)
+        }
         this.attributes = null;
         return new BotService(this.port, this.host, this.name)
     }
