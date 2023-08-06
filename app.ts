@@ -44,11 +44,11 @@ app.post('/canDo/:name', async (req, res) => {
     res.send(await bot.start_task(req.body, true))
 })
 
-app.post('/tryDo/:name', (req, res) => {
+app.post('/tryDo/:name', async (req, res) => {
     const bot = getBot(req.params.name);
     console.log(req.body)
-    bot.start_task(req.body)
-    res.send({"message": "task started"})
+    const result = await bot.start_task(req.body)
+    res.send({"message": "task started", "result": result })
 })
 
 app.post('/all/tryDo', (req, res) => {

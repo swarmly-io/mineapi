@@ -19,7 +19,7 @@ let mcData = mcd(MinecraftVersion)
 type ActionParams = CraftActionParams | FightActionParams | FindAndCollectParams | PlaceActionParams | SleepActionParams | TravelActionParams
 
 export interface CallbackInfo {
-    typeName: string
+    typeName: 'CraftAction' | 'FightAction' | 'FindAndCollectAction' | 'PlaceAction' | 'SleepAction' | 'TravelAction'
     params: ActionParams
     continueOnFailure: boolean
     callback?: Action<any>
@@ -83,7 +83,7 @@ export interface InitBot {
 
 export class BotService {
     port: number = 0
-    host: string = "localhost"
+    host: string = "host.docker.internal"
     name: string = "McBot"
 
     bot: Bot
