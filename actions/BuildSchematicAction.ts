@@ -9,8 +9,6 @@ import { Build } from 'mineflayer-builder'
 import interactable from 'mineflayer-builder/lib/interactable.json';
 import { goals, Movements, pathfinder } from 'mineflayer-pathfinder';
 
-import { Block } from 'prismarine-block'
-
 export type BuildSchematicParams = {
     schematic: Schematic,
     position: Vec3

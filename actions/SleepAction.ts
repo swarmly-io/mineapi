@@ -1,7 +1,8 @@
 import { BlockNotFoundError } from "../errors/BlockNotFoundError";
 import { findBlock } from "../helpers/EnvironmentHelper";
 import { Observation, Consequences } from "../types";
-import { Action, ActionParams, DEFAULT_ALLOWED_DISTANCE } from "./Action";
+import { Action, ActionAnalysisPredicate, ActionParams, DEFAULT_ALLOWED_DISTANCE } from "./Action";
+import { ActionState } from "./BotActionState";
 import { ActionDoResult } from "./types";
 
 export type SleepActionParams = {
@@ -54,5 +55,12 @@ export class SleepAction extends Action<SleepActionParams> {
         await this.bot.sleep(this.bot.blockAt(block)!)
         
         return true
+    }
+
+    analyseFn(): ActionAnalysisPredicate {
+        return (state: ActionState) => ({
+          is_progressing: state.isSleeping,
+          is_stuck: !state.isSleeping
+        });
     }
 }

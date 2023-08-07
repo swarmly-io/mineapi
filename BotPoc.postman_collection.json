@@ -108,7 +108,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "[{\r\n    \"typeName\": \"FightAction\",\r\n    \"params\": {\r\n        \"entityName\": \"turtle\",\r\n        \"entityType\": \"mob\"\r\n    }\r\n}]",
+					"raw": "[{\r\n    \"typeName\": \"FindAndCollectAction\",\r\n    \"params\": {\r\n        \"blockIds\": [33],\r\n        \"amountToCollect\": 2,\r\n        \"allowedMaxDistance\": 500\r\n    }\r\n}]",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -116,20 +116,116 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:3000/all/tryDo/",
+					"raw": "http://localhost:3000/tryDo/bot123456",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
 					"port": "3000",
 					"path": [
-						"all",
 						"tryDo",
-						""
+						"bot123456"
 					]
 				}
 			},
-			"response": []
+			"response": [
+				{
+					"name": "TryDo - fight a turtle",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[{\r\n    \"typeName\": \"FightAction\",\r\n    \"params\": {\r\n        \"entityName\": \"turtle\",\r\n        \"entityType\": \"mob\"\r\n    }\r\n}]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/all/tryDo/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"all",
+								"tryDo",
+								""
+							]
+						}
+					},
+					"_postman_previewlanguage": null,
+					"header": null,
+					"cookie": [],
+					"body": null
+				},
+				{
+					"name": "TryDo - get iron ore",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[{\r\n    \"typeName\": \"FindAndCollectAction\",\r\n    \"params\": {\r\n        \"blockIds\": [33],\r\n        \"amountToCollect\": 2,\r\n        \"allowedMaxDistance\": 500\r\n    }\r\n}]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/tryDo/bot123456",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"tryDo",
+								"bot123456"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "X-Powered-By",
+							"value": "Express"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "Content-Length",
+							"value": "40"
+						},
+						{
+							"key": "ETag",
+							"value": "W/\"28-dNwHgrZdCJ9ray/iKI9IGV3DUsk\""
+						},
+						{
+							"key": "Date",
+							"value": "Sun, 06 Aug 2023 07:31:16 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"message\": \"task started\",\n    \"result\": true\n}"
+				}
+			]
 		},
 		{
 			"name": "CanDo",

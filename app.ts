@@ -5,10 +5,11 @@ import { MinecraftVersion } from './Config';
 import { SearchData, searchMcData } from './helpers/McDataHelper';
 import { TravelGoal, createGoal } from './helpers/TravelHelper'
 import { Example, StartExample } from './example';
+import 'express-async-errors';
 
 const app = express();
 const port = 3000;
-app.use(express.json());
+app.use(express.json())
 
 const bots: { [name: string]: BotService } = {}
 let mcData = mcd(MinecraftVersion)
@@ -52,6 +53,12 @@ app.post('/tryDo/:name', async (req, res) => {
     res.send({"message": "task started", "result": result })
 })
 
+app.get('/stop/:name', async (req, res) => {
+    const bot = getBot(req.params.name);
+    await bot.stop()
+    res.send({"message": "bot stopped" })
+})
+
 app.post('/all/tryDo', (req, res) => {
     for (const name of Object.keys(bots)) {
         const bot = bots[name]
@@ -67,6 +74,11 @@ app.post('/all/tryDo', (req, res) => {
 app.get("/state/:name", async (req, res) => {
     const bot = getBot(req.params.name)
     res.send(await bot.get_agent_state())
+})
+
+app.get('/action_state/:name', async (req, res) => {
+    const bot = getBot(req.params.name);
+    res.send(await bot.get_action_state())
 })
 
 app.get("/players/:name", (req, res) => {

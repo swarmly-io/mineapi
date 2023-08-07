@@ -1,10 +1,11 @@
 import { observeInventory, vec2key } from "../Observer"
 import { Observation, Consequences, InventoryObservation } from "../types"
-import { Action, ActionParams } from "./Action"
+import { Action, ActionAnalysisPredicate, ActionParams } from "./Action"
 import { Vec3 } from 'vec3'
 import { ActionDoResult } from "./types"
 import { findBlocks, getBlockAt } from "../helpers/EnvironmentHelper"
 import { goals } from "mineflayer-pathfinder"
+import { ActionState } from "./BotActionState"
 
 export type PlaceActionParams = {
     itemId: number,
@@ -115,5 +116,12 @@ export class PlaceAction extends Action<PlaceActionParams> {
         }
         let block = this.mcData.blocksByName[this.mcData.items[itemId].name] // unfortunately itemIds and blockIds differ from each other
         return block
+    }
+
+    analyseFn(): ActionAnalysisPredicate {
+        return (state: ActionState) => ({
+          is_progressing: state.isMoving,
+          is_stuck: !state.isMoving // todo
+        });
     }
 }

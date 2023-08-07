@@ -1,7 +1,8 @@
-import { Action, ActionParams } from "./Action";
+import { Action, ActionAnalysisPredicate, ActionParams } from "./Action";
 import { goals } from 'mineflayer-pathfinder'
 import { Observation, Consequences } from "../types";
 import { ActionDoResult } from "./types";
+import { ActionState } from "./BotActionState";
 
 export type TravelActionParams = {
     goal: goals.Goal,
@@ -30,5 +31,12 @@ export class TravelAction extends Action<TravelActionParams> {
         return {
             success: true,
         }
+    }
+
+    analyseFn(): ActionAnalysisPredicate {
+        return (state: ActionState) => ({
+          is_progressing: state.isMoving,
+          is_stuck: !state.isMoving
+        });
     }
 }

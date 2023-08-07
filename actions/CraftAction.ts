@@ -1,9 +1,9 @@
-import { RecipeNotFoundError } from "../errors/RecipeNotFoundError"
 import { findBlock } from "../helpers/EnvironmentHelper"
 import { craftableAmount, findRecipes } from "../helpers/RecipeHelper"
 import { observeInventory } from "../Observer"
 import { Observation, Consequences, SuccessfulConsequences } from "../types"
-import { Action, ActionParams } from "./Action"
+import { Action, ActionAnalysisPredicate, ActionParams } from "./Action"
+import { ActionState } from "./BotActionState"
 import { ActionDoResult } from "./types"
 import { Block } from 'prismarine-block'
 
@@ -100,5 +100,12 @@ export class CraftAction extends Action<CraftActionParams> {
             }
         }
         return consequences
+    }
+
+    analyseFn(): ActionAnalysisPredicate {
+        return (state: ActionState) => ({
+          is_progressing: state.isMoving,
+          is_stuck: !state.isMoving,
+        });
     }
 }

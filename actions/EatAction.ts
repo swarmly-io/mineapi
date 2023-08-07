@@ -1,5 +1,6 @@
 import { Observation, Consequences } from "../types"
-import { Action, ActionParams } from "./Action"
+import { Action, ActionAnalysisPredicate, ActionParams } from "./Action"
+import { ActionState } from "./BotActionState"
 import { ActionDoResult } from "./types"
 
 export type EatActionParams = {
@@ -26,5 +27,12 @@ export class EatAction extends Action<EatActionParams> {
             success: success,
             reason: "Didn't meet criteria to fight"
         }
+    }
+
+    analyseFn(): ActionAnalysisPredicate {
+        return (state: ActionState) => ({
+          is_progressing: state.isEating,
+          is_stuck: !state.isEating
+        });
     }
 }

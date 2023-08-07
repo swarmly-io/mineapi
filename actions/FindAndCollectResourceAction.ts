@@ -5,10 +5,11 @@ import { findBlocks } from "../helpers/EnvironmentHelper"
 import { assertHas } from "../helpers/InventoryHelper"
 import { vec2key } from '../Observer'
 import { Observation, Consequences } from "../types"
-import { Action, ActionParams } from "./Action"
+import { Action, ActionAnalysisPredicate, ActionParams } from "./Action"
 import { ActionDoResult } from './types'
-import pathfinder from 'mineflayer-pathfinder';
-const { GoalBlock } = pathfinder.goals;
+import pathfinder from 'mineflayer-pathfinder'
+import { ActionState } from './BotActionState'
+const { GoalBlock } = pathfinder.goals
 
 export type FindAndCollectParams = {
     blockIds: number | number[],
@@ -20,6 +21,17 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
 
     constructor(params: ActionParams<FindAndCollectParams>) {
         super(params)
+    }
+
+    private async nudge() {
+        const getRandomSurroundingCoord = () => ({
+            x: Math.floor(Math.random() * 3) - 1 + this.bot.entity.position.x,
+            y: this.bot.entity.position.y,
+            z: Math.floor(Math.random() * 3) - 1 + this.bot.entity.position.z
+        });
+        const coord= getRandomSurroundingCoord();
+        const moveOneBlockBackward = () => this.bot.pathfinder.setGoal(new GoalBlock(coord.x, coord.y, coord.z));
+        moveOneBlockBackward()
     }
 
     async do(): Promise<ActionDoResult> { // TODO: Do we need metadata?     
@@ -99,12 +111,13 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
                     .then(() => {
                         this.bot.chat(`finished digging ${target.name}`);
                     })
-                    .catch((err) => {
+                    .catch(async (err) => {
                         if (err.message === 'Navigation timed out!') {
                             this.bot.chat('I had trouble navigating. Please check my path.');
                         } else {
                             this.bot.chat(err.message);
                         }
+                        await this.nudge()
                         console.log(err.stack);
                     });
             }
@@ -156,4 +169,11 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
             world: Object.fromEntries(blocks.map(x => [vec2key(x), this.mcData.blocksByName.air.id]))
         }
     }
+
+    analyseFn(): ActionAnalysisPredicate {
+        return (state: ActionState) => ({
+          is_progressing: state.isDigging || state.isMoving,
+          is_stuck: !state.isDigging && !state.isMoving
+        });
+    }     
 }

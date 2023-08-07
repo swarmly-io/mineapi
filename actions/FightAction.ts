@@ -1,5 +1,6 @@
 import { Observation, Consequences } from "../types"
-import { Action, ActionParams } from "./Action"
+import { Action, ActionAnalysisPredicate, ActionParams } from "./Action"
+import { ActionState } from "./BotActionState"
 import { ActionDoResult } from "./types"
 import { Entity } from 'prismarine-entity'
 
@@ -84,5 +85,12 @@ export class FightAction extends Action<FightActionParams> {
         }
 
         return best;
+      }
+
+      analyseFn(): ActionAnalysisPredicate {
+        return (state: ActionState) => ({
+          is_progressing: state.isFighting || state.isMoving,
+          is_stuck: !state.isFighting && !state.isMoving,
+        });
       }
 }

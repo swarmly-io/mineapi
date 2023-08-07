@@ -13,6 +13,7 @@ import { TravelAction, TravelActionParams } from "./actions/TravelAction";
 import { observe } from "./Observer";
 import { FailedChainResult } from "./types";
 import { Action } from "./actions/Action";
+import { ActionState, BotActionState } from "./actions/BotActionState";
 
 let mcData = mcd(MinecraftVersion)
 
@@ -35,9 +36,11 @@ export interface Task {
 class TaskRunner {
     tasks: { [id: string]: Task } = {}
     attributes: Attributes
+    actionState: BotActionState;
 
     constructor(attributes: Attributes) {
         this.attributes = attributes
+        this.actionState = new BotActionState(this.attributes.bot)
     }
 
     async start(task: Task, isPossible: boolean = false) {
@@ -58,11 +61,15 @@ class TaskRunner {
                 return new cons(params)
             }))
         } else {
-            return await this.attributes.tryDo(task.callbackChain.map(x=> {
+            const result = await this.attributes.tryDo(task.callbackChain.map(x=> {
                 const cons = x.callback! as any;
                 const params = { ...this.attributes.actionOptions, ...x.params }
-                return new cons(params)
+                const action = new cons(params)
+                this.actionState.startTask(action)
+                return action
             }))
+            this.actionState.stopTask();
+            return result;
         }
     }
 
@@ -127,6 +134,10 @@ export class BotService {
         return await observe(this.bot)
     }
 
+    async get_action_state() {
+        return await this.taskRunner?.actionState.get_action_state()
+    }
+
     async start_task(callbackChain: CallbackInfo[], isPossible: boolean = false) {
         for (let info of callbackChain) {
             const cons = this.actionsMap[info.typeName]
@@ -136,11 +147,18 @@ export class BotService {
             info.callback = cons;
         }
         let task = { id: v4(), callbackChain: callbackChain } as Task
+        
         return this.taskRunner!.start(task, isPossible)
     }
 
     chat(message: string) {
         this.bot.chat(message)
+    }
+
+    async stop() {
+        this.bot.pathfinder.stop()
+        this.bot.stopDigging()
+        this.bot.chat("Have stopped for now")
     }
 
     reset() {
