@@ -9,7 +9,7 @@ import { Action, ActionAnalysisPredicate, ActionParams } from "./Action"
 import { ActionDoResult } from './types'
 import pathfinder from 'mineflayer-pathfinder'
 import { ActionState } from './BotActionState'
-const { GoalBlock } = pathfinder.goals
+const { GoalBlock, GoalNear } = pathfinder.goals
 
 export type FindAndCollectParams = {
     blockIds: number | number[],
@@ -25,12 +25,12 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
 
     private async nudge() {
         const getRandomSurroundingCoord = () => ({
-            x: Math.floor(Math.random() * 3) - 1 + this.bot.entity.position.x,
+            x: Math.floor(Math.random() * 3) - 4 + this.bot.entity.position.x,
             y: this.bot.entity.position.y,
-            z: Math.floor(Math.random() * 3) - 1 + this.bot.entity.position.z
+            z: Math.floor(Math.random() * 3) - 4 + this.bot.entity.position.z
         });
         const coord= getRandomSurroundingCoord();
-        const moveOneBlockBackward = () => this.bot.pathfinder.setGoal(new GoalBlock(coord.x, coord.y, coord.z));
+        const moveOneBlockBackward = () => this.bot.pathfinder.setGoal(new GoalNear(coord.x, coord.y, coord.z, 2));
         moveOneBlockBackward()
     }
 
@@ -40,23 +40,30 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
         if (blocks.length === 0) {
             return { reason: "FindAndCollectBlock: No blocks found" }
         }
-
-        const targets: Block[] = []
-        let equiped = false
-        for (let i = 0; i < Math.min(blocks.length, this.options.amountToCollect); i++) {
-            let block = this.bot.blockAt(blocks[i])
-            if (block) {
-                targets.push(block!)
-                if (!equiped) {
-                    await this.bot.tool.equipForBlock(block!, { getFromChest: true })
-                    equiped = true
+        await this.nudge()
+        let targetCount = this.options.amountToCollect;
+        
+        const getTargets = async () => {
+            const targets: Block[] = []
+            let equiped = false
+            for (let i = 0; i < Math.min(blocks.length, targetCount); i++) {
+                let block = this.bot.blockAt(blocks[i])
+                if (block) {
+                    targets.push(block!)
+                    if (!equiped) {
+                        await this.bot.tool.equipForBlock(block!, { getFromChest: true })
+                        equiped = true
+                    }
                 }
             }
+            return targets
         }
+
+        let targets: Block[] = await getTargets()
 
         const moveToBlock = async (targetBlock) => {
             return new Promise((resolve, reject) => {
-                this.bot.pathfinder.setGoal(new GoalBlock(targetBlock.position.x, targetBlock.position.y, targetBlock.position.z));
+                this.bot.pathfinder.setGoal(new GoalNear(targetBlock.position.x, targetBlock.position.y, targetBlock.position.z, 1));
 
                 this.bot.once('goal_reached', resolve);
                 this.bot.once('path_update', (data) => {
@@ -88,7 +95,7 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
             }
         }
 
-        const timeoutDuration = 30000; // 30 seconds
+        const timeoutDuration = 5000; // 30 seconds
         const timeoutPromise = () => new Promise((_, reject) => {
             setTimeout(() => {
                 reject(new Error('Navigation timed out!'));
@@ -96,7 +103,11 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
         });
 
         try {
-            for (let target of targets) {
+            let failCount = 0;
+            while (targets.length > 0) {
+                const target = targets.pop();
+                if (!target) break;
+                
                 console.log("Target", target)
                 //@ts-ignore  ts doesnt know about mineflayer plugins
                 await Promise.race([moveToBlock(target), timeoutPromise()])
@@ -110,6 +121,7 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
                     })
                     .then(() => {
                         this.bot.chat(`finished digging ${target.name}`);
+                        targetCount -= 1;
                     })
                     .catch(async (err) => {
                         if (err.message === 'Navigation timed out!') {
@@ -118,7 +130,12 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
                             this.bot.chat(err.message);
                         }
                         await this.nudge()
-                        console.log(err.stack);
+                        if (failCount > 2) {
+                            throw new Error("Failed to collect")
+                        }
+                        failCount+=1;
+                        // re target
+                        targets = await getTargets()
                     });
             }
         } catch (e) {
@@ -151,6 +168,9 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
         }
 
         const blocks = findBlocks(this.bot, mineableBlockTypes.map(x => x.id), this.options.allowedMaxDistance, this.options.amountToCollect, observation)
+        if (!blocks) {
+            return { success: false, reason: "FindAndCollectResource: No blocks found" }
+        }
 
         if (blocks.length < this.options.amountToCollect) {
             return { success: false, reason: "FindAndCollectResource: Not enough blocks found" }

@@ -26,7 +26,7 @@ export class BuildSchematicAction extends Action<BuildSchematicParams> {
         if (!this.bot.hasPlugin(pathfinder))
             this.bot.loadPlugin(pathfinder)
 
-        this.movements = new Movements(this.bot, this.mcData)
+        this.movements = new Movements(this.bot)
         this.movements.digCost = 10
         this.movements.maxDropDown = 256
         // @ts-ignore

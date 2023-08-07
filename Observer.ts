@@ -35,7 +35,7 @@ export const observeInventory = function(bot: Bot): InventoryObservation {
 
 export const observe = async function(bot: Bot): Promise<Observation> {
     return {
-        position: bot.entity.position.clone(),
+        position: bot.entity?.position?.clone(),
         status: {
             health: bot.health,
             food: bot.food,

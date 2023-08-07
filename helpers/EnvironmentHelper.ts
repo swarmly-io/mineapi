@@ -26,10 +26,17 @@ export const findBlocks = function(bot: Bot, blockId: number | number[], maxDist
         blocks = Object.entries(observation.world).filter(([_, blockId]) => blockIds.includes(blockId)).map(([pos, _]) => key2vec(pos))
     }
 
+    if (observation && !observation.position) {
+        return []
+    }
+    if (!bot.entity || !bot.entity.position) {
+        return []
+    }
+
     blocks.push(...bot.findBlocks({
         matching: blockId,
         maxDistance: maxDistance,
-        point: observation?.position ?? bot.entity.position,
+        point: observation?.position ?? bot.entity?.position,
         count: count
     }).filter(x => !blocks.includes(x)))
 
