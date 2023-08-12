@@ -30,12 +30,17 @@ export class Action<T> {
         this.options = options as T
     }
 
-    async do(): Promise<ActionDoResult> {    
+    async do(possibleCheck: boolean = false): Promise<ActionDoResult> {   
         throw new Error('Cannot call do() on empty action')
     }
 
-    async possible (observation: Observation) : Promise<Consequences> {
-        throw new Error('Cannot call possible() on empty action')
+    async possible(observation: Observation): Promise<Consequences> {
+        const result = await this.do(true);
+        if (result == true) {
+            return { success: true }
+        } else {
+            return { success: false, reason: result.reason }
+        }
     }
 
     analyseFn(): ActionAnalysisPredicate {

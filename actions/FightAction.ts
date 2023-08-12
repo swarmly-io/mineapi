@@ -15,51 +15,18 @@ export class FightAction extends Action<FightActionParams> {
         super(params)
     }
 
-    async do(): Promise<ActionDoResult> {
+    async do(possibleCheck: boolean = false): Promise<ActionDoResult> {
         const { entityName, entityType } = this.options
 
         const entity = await this.nearestEntity(entityName, entityType)
-        console.log(entity)
-        this.bot.pvp.attack(entity as unknown as Entity)
+        if (!entity) {
+          return { reason: "No entity to fight was found" }
+        }
+        if (!possibleCheck) {
+          this.bot.pvp.attack(entity as unknown as Entity)
+        }
         
         return true
-    }
-
-    // todo - Multiple consequences -> E[X] Var[X]
-    async possible(_: Observation): Promise<Consequences> {
-        // is the entity near?
-        // can the entity be defeated? -> not enough info from entity to decide
-        // are there other entities around which will attack during the engagement
-        // player has enough health, armour
-        const { entityName, entityType } = this.options
-        let success = false
-        const entity = await this.nearestEntity(entityName, entityType)
-        if (entity) {
-            const concentration = await this.calculateEntityConcentration(entity)
-            // todo if bot equiped with different items would be different
-            // todo if each entity is equipped with different items would also be different
-            if (concentration < 4) {
-                success = true
-            }
-        }
-       
-        return success ? { success } : {
-            success: success,
-            reason: "Didn't meet criteria to fight"
-        }
-    }
-
-    async calculateEntityConcentration(entity: Entity, minDistance: number = 5) {
-        let count = 0
-        for(let [x, e] of Object.entries(this.bot.entities)) {
-            if (e.type !== entity.type) continue
-            if (e.entityType !== entity.entityType) continue
-            let distance = entity.position.distanceTo(e.position)
-            if (distance <= minDistance) {
-                count += 1
-            }
-        }
-        return count
     }
 
     async nearestEntity(name: string, type: string) {

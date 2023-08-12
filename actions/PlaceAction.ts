@@ -21,7 +21,7 @@ export class PlaceAction extends Action<PlaceActionParams> {
         super(params)
     }
 
-    async do(): Promise<ActionDoResult> {
+    async do(possibleCheck: boolean = false): Promise<ActionDoResult> {
         let block;
         try{
             block = this.getAvailableBlock()
@@ -32,6 +32,10 @@ export class PlaceAction extends Action<PlaceActionParams> {
         let placePos = this.findBlockPosition()
         if (placePos === undefined) {
             return { reason: 'PlaceBlock: No position found to place the block' }
+        }
+
+        if (possibleCheck) {
+            return true;
         }
 
         await this.bot.equip(this.options.itemId, "hand")
@@ -48,38 +52,6 @@ export class PlaceAction extends Action<PlaceActionParams> {
         }
 
         return true
-    }
-
-    async possible(observation: Observation): Promise<Consequences> {
-        let value = false
-        let reason: string | undefined = undefined
-            try {
-                value = !!this.getAvailableBlock(observation.inventory)
-            } catch {
-                value = false;
-                reason = 'PlaceBlock: Block not in inventory'
-            }
-
-        let placePosition = this.findBlockPosition(observation)
-        if (placePosition === undefined) {
-            value = false
-            reason = 'PlaceBlock: No position found to place the block'
-        }
-
-        let newInventory = !value ? 
-                            observation.inventory.items : 
-                            { ...observation.inventory.items, ...{ [this.options.itemId]: observation.inventory.items[this.options.itemId] - 1 } }
-        
-        return Promise.resolve({
-            success: value,
-            reason: reason,
-            inventory: newInventory,
-            position: observation.position,
-            time: observation.time,
-            world: placePosition !== undefined ?
-                    {[vec2key(placePosition!.position)]: this.mcData.blocksByName[this.mcData.items[this.options.itemId].name].id} :
-                    undefined
-        } as Consequences)
     }
 
     // Returns any solid block with an airblock next to it

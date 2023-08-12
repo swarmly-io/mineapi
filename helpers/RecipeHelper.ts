@@ -61,13 +61,38 @@ export const parseRecipe = (recipe: Recipe): IngredientRecipe => {
 }
 
 export const craftableAmount = (recipe: IngredientRecipe, inventory: InventoryObservation): number => {
-    return Math.min(
-        ...Object.entries(recipe.ingredients)
-                 .map(([itemId, itemCount]) => Math.floor((inventory.items[itemId] ?? 0) / itemCount)))
+    const craftableAmounts: number[] = [];
+
+    for (const [itemId, itemCount] of Object.entries(recipe.ingredients)) {
+        const availableItemCount = inventory.items[itemId] || 0;
+        const craftableCount = Math.floor(availableItemCount / itemCount);
+        if (craftableCount == 0) {
+            console.log(recipe.ingredients)
+            console.log(`Missing ${itemId} needs: ${itemCount} have: ${availableItemCount}`)
+        } else {
+            console.log(`Able to craft with ${itemId}`)
+        }
+        craftableAmounts.push(craftableCount);
+    }
+
+    // Find the minimum value from the craftable amounts, as it represents the limiting factor.
+    const maxCraftableAmount = Math.min(...craftableAmounts);
+
+    return maxCraftableAmount;
 }
 
 export const findRecipes = (mcData: IndexedData, itemId: number, hasCraftingTable: boolean, inventory: InventoryObservation) => {
-    return mcData.recipes[itemId]
+    const recipe = mcData.recipes[itemId]
         .map(x => parseRecipe(x))
-        .filter(x => (!hasCraftingTable ? !x.requiresTable : true) && craftableAmount(x, inventory) > 0)
+    
+    const haveRequiredTable = recipe.filter(x => (!hasCraftingTable ? !x.requiresTable : true))
+    if (haveRequiredTable.length == 0) {
+        throw new Error("Needed crafting table but didn't have one")
+    }
+    const ableToCraftAmount = haveRequiredTable.filter(x=> craftableAmount(x, inventory) > 0)
+    if (haveRequiredTable.length == 0) {
+        throw new Error("Didn't have enough materials")
+    }
+    console.log("Craftable", ableToCraftAmount)
+    return ableToCraftAmount
 }

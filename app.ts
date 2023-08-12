@@ -25,10 +25,15 @@ app.post('/', (req, res) => {
         res.send({ botId: bots[params.name].id, name: params.name });
     }
 
-    let bot = new BotService(params.port, params.host, params.name)
-    bots[bot.name] = bot
+    try {
+        let bot = new BotService(params.port, params.host, params.name)
+        bots[bot.name] = bot
 
-    res.send({ botId: bot.id, name: params.name });
+        res.send({ botId: bot.id, name: params.name });
+    } catch (e) {
+        console.log(e)
+        res.status(500)
+    }
 });
 
 app.get('/status/:name', (req, res) => {

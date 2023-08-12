@@ -16,7 +16,7 @@ import { plugin as tool } from 'mineflayer-tool'
 import { FightAction, FightActionParams } from './actions/FightAction'
 import { BuildSchematicAction, BuildSchematicParams } from './actions/BuildSchematicAction'
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 const DEFAULT_ALLOWED_DISTANCE = 16
 export class Attributes {
