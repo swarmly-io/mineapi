@@ -8,6 +8,7 @@ import { ActionDoResult } from './types'
 import pathfinder from 'mineflayer-pathfinder'
 import { ActionState } from './BotActionState'
 import { sleep } from '../Attributes'
+import { Observation } from '../types'
 const { GoalNear } = pathfinder.goals
 
 export type FindAndCollectParams = {
@@ -33,40 +34,37 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
         moveOneBlockBackward()
     }
 
-    async do(possibleCheck: boolean = false): Promise<ActionDoResult> { // TODO: Do we need metadata?     
-        const blocks = findBlocks(this.bot, this.options.blockIds, this.options.allowedMaxDistance, this.options.amountToCollect)
-        if (!blocks) {
-            return { reason: "FindAndCollectResource: No blocks found" }
-        }
-
-        if (blocks.length < this.options.amountToCollect) {
-            return { reason: "FindAndCollectResource: Not enough blocks found" }
-        }
-
-        if (!possibleCheck) this.bot.chat("Going to get some blocks: " + blocks.length)
-        let observation = await observe(this.bot)
-
+    async do(possibleCheck: boolean = false, observation: Observation | undefined): Promise<ActionDoResult> { // TODO: Do we need metadata? 
         let blockTypes = typeof this.options.blockIds === 'number' ? [this.mcData.blocks[this.options.blockIds]] : this.options.blockIds.map(x => this.mcData.blocks[x])
-        // Now checking for harvest tools
-        let mineableBlockTypes = blockTypes.filter(blockType => {
-            if (blockType.harvestTools !== undefined) {
-                try {
-                    assertHas(observation, 1, (i => !blockType.harvestTools || Object.keys(blockType.harvestTools!).includes(i as string)))
-                } catch (e) {
-                    if (e instanceof NotEnoughItemsError) {
-                        return false
-                    } else throw e
-                }
-            }
-            return true
-        })
-        if (mineableBlockTypes.length === 0) {
-            return { reason: "FindAndCollectResource: No blocks found" }
-        }
-
         if (possibleCheck) {
-            return true
+            const blocks = findBlocks(this.bot, this.options.blockIds, this.options.allowedMaxDistance, this.options.amountToCollect, observation)
+            if (!blocks) {
+                return { reason: "FindAndCollectResource: No blocks found" }
+            }
+
+            if (blocks.length < this.options.amountToCollect) {
+                return { reason: "FindAndCollectResource: Not enough blocks found" }
+            }
+            // Now checking for harvest tools
+            let mineableBlockTypes = blockTypes.filter(blockType => {
+                if (blockType.harvestTools !== undefined) {
+                    try {
+                        assertHas(observation!, 1, (i => !blockType.harvestTools || Object.keys(blockType.harvestTools!).includes(i as string)))
+                    } catch (e) {
+                        if (e instanceof NotEnoughItemsError) {
+                            return false
+                        } else throw e
+                    }
+                }
+                return true
+            })
+            if (mineableBlockTypes.length === 0) {
+                return { reason: "FindAndCollectResource: No blocks found" }
+            }
+            return true;
         }
+        const blocks = findBlocks(this.bot, this.options.blockIds, this.options.allowedMaxDistance, this.options.amountToCollect)
+        this.bot.chat("Going to get some blocks: " + blocks.length)
 
         await this.nudge()
         let targetCount = this.options.amountToCollect;

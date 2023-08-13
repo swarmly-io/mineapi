@@ -125,6 +125,10 @@ export class BotService {
             console.log(err)
             this.errors.push(err)
         })
+
+        this.bot.on('end', () => {
+            console.log('Bot has disconnected from the server.');
+        });
     }
 
     get_actions() {

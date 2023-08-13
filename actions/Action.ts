@@ -30,14 +30,16 @@ export class Action<T> {
         this.options = options as T
     }
 
-    async do(possibleCheck: boolean = false): Promise<ActionDoResult> {   
+    async do(possibleCheck: boolean = false, observation: Observation | undefined = undefined): Promise<ActionDoResult> {   
         throw new Error('Cannot call do() on empty action')
     }
 
     async possible(observation: Observation): Promise<Consequences> {
-        const result = await this.do(true);
+        const result = await this.do(true, observation);
         if (result == true) {
-            return { success: true }
+            return { 
+                success: true
+            }
         } else {
             return { success: false, reason: result.reason }
         }

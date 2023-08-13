@@ -21,7 +21,7 @@ export class PlaceAction extends Action<PlaceActionParams> {
         super(params)
     }
 
-    async do(possibleCheck: boolean = false): Promise<ActionDoResult> {
+    async do(possibleCheck: boolean = false, observation: Observation | undefined): Promise<ActionDoResult> {
         let block;
         try{
             block = this.getAvailableBlock()

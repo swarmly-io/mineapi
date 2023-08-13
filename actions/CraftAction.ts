@@ -1,4 +1,3 @@
-import { sleep } from "../Attributes"
 import { findBlock } from "../helpers/EnvironmentHelper"
 import { craftableAmount, findRecipes } from "../helpers/RecipeHelper"
 import { observeInventory } from "../Observer"
@@ -7,6 +6,7 @@ import { ActionState } from "./BotActionState"
 import { ActionDoResult } from "./types"
 import { Block } from 'prismarine-block'
 import pathfinder from 'mineflayer-pathfinder'
+import { Observation } from "../types"
 const { GoalNear } = pathfinder.goals
 
 export type CraftActionParams = {
@@ -23,10 +23,10 @@ export class CraftAction extends Action<CraftActionParams> {
         params.count = params.count ?? 1
     }
 
-    async do(possibleCheck: boolean = false): Promise<ActionDoResult> {
+    async do(possibleCheck: boolean = false, observation: Observation | undefined): Promise<ActionDoResult> {
         let craftingTablePos = findBlock(this.bot, 
             this.mcData.blocksByName.crafting_table.id, 
-            this.options.allowedMaxDistance !== undefined ? this.options.allowedMaxDistance : 6.0)
+            this.options.allowedMaxDistance !== undefined ? this.options.allowedMaxDistance : 6.0, observation)
 
         let craftingTable: Block | null = null
         if (craftingTablePos)

@@ -24,10 +24,10 @@ export class SmeltAction extends Action<SmeltActionParams> {
         params.count = params.count ?? 1
     }
 
-    async do(possibleCheck: boolean = false): Promise<ActionDoResult> {
+    async do(possibleCheck: boolean = false, observation: Observation | undefined = undefined): Promise<ActionDoResult> {
         let furnacePos = findBlock(this.bot, 
             this.mcData.blocksByName.furnace.id, 
-            this.options.allowedMaxDistance !== undefined ? this.options.allowedMaxDistance : 6.0)
+            this.options.allowedMaxDistance !== undefined ? this.options.allowedMaxDistance : 6.0, observation)
 
         let furnace: Block | null = null
         if (furnacePos)
@@ -104,15 +104,6 @@ export class SmeltAction extends Action<SmeltActionParams> {
         
         // @ts-ignore mutated in listener
         return completed
-    }
-
-    async possible(observation: Observation): Promise<Consequences> {
-        const result = await this.do(true);
-        if (result == true) {
-            return { success: true }
-        } else {
-            return { success: false, reason: result.reason }
-        }
     }
 
     analyseFn(): ActionAnalysisPredicate {
