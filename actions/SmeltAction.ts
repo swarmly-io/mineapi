@@ -7,7 +7,7 @@ import { ActionDoResult } from "./types"
 import { Block } from 'prismarine-block'
 import smelting from '../helpers/smelting.json'
 import { sleep } from "../Attributes"
-import { lookAtBlock, moveToPosition } from "../helpers/TravelHelper"
+import { lookAtBlock, moveToPositionWithRetry } from "../helpers/TravelHelper"
 import { Furnace } from "mineflayer"
 
 export type SmeltActionParams = {
@@ -36,7 +36,7 @@ export class SmeltAction extends Action<SmeltActionParams> {
         if (furnace && furnacePos) {
             if (this.bot.entity.position.distanceTo(furnacePos) > 1 && !possibleCheck) {
                 const positionInFront = furnacePos.offset(0, 0, 0);
-                await moveToPosition(this.bot, positionInFront)
+                await moveToPositionWithRetry(this.bot, positionInFront)
                 this.bot.chat("Moved to furnace")
             }
         } else {
@@ -118,7 +118,7 @@ export class SmeltAction extends Action<SmeltActionParams> {
         while (positionsAround.length > 0 && !openFurnace) {
             openFurnace = await Promise.race([this.bot.openFurnace(furnace), resolveAfterTimeout(2000)])
             if (openFurnace == null) {
-                await moveToPosition(this.bot, positionsAround.pop())
+                await moveToPositionWithRetry(this.bot, positionsAround.pop()!)
             } else {
                 if (openFurnace.inputItem()) {
                     await openFurnace.takeInput()

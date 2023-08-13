@@ -2,14 +2,13 @@ import { Block } from 'prismarine-block'
 import { NotEnoughItemsError } from "../errors/NotEnoughItemsError"
 import { findBlocks } from "../helpers/EnvironmentHelper"
 import { assertHas } from "../helpers/InventoryHelper"
-import { observe } from '../Observer'
 import { Action, ActionAnalysisPredicate, ActionParams } from "./Action"
 import { ActionDoResult } from './types'
-import pathfinder from 'mineflayer-pathfinder'
 import { ActionState } from './BotActionState'
 import { sleep } from '../Attributes'
 import { Observation } from '../types'
-const { GoalNear } = pathfinder.goals
+import { moveToPositionWithRetry } from '../helpers/TravelHelper'
+import { Vec3 } from 'vec3'
 
 export type FindAndCollectParams = {
     blockIds: number | number[],
@@ -24,14 +23,14 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
     }
 
     private async nudge() {
-        const getRandomSurroundingCoord = () => ({
+        const toVec = (x) => new Vec3(x.x, x.y, x.z)
+        const getRandomSurroundingCoord = () => (toVec({
             x: Math.floor(Math.random() * 3) - 4 + this.bot.entity.position.x,
             y: this.bot.entity.position.y,
             z: Math.floor(Math.random() * 3) - 4 + this.bot.entity.position.z
-        });
+        }));
         const coord = getRandomSurroundingCoord();
-        const moveOneBlockBackward = () => this.bot.pathfinder.setGoal(new GoalNear(coord.x, coord.y, coord.z, 2));
-        moveOneBlockBackward()
+        await moveToPositionWithRetry(this.bot, coord)
     }
 
     async do(possibleCheck: boolean = false, observation: Observation | undefined): Promise<ActionDoResult> { // TODO: Do we need metadata? 
@@ -90,17 +89,6 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
 
         let targets: Block[] = await getTargets()
 
-        const moveToBlock = async (targetBlock) => {
-            return new Promise((resolve, reject) => {
-                this.bot.pathfinder.setGoal(new GoalNear(targetBlock.position.x, targetBlock.position.y, targetBlock.position.z, 1));
-
-                this.bot.once('goal_reached', resolve);
-                this.bot.once('path_update', (data) => {
-                    if (data.status === 'noPath') reject(new Error('No path to target block!'));
-                });
-            });
-        }
-
         const dig = async (targetBlock) => {
             if (!targetBlock) {
                 this.bot.chat('No target block provided');
@@ -126,13 +114,6 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
             }
         }
 
-        const timeoutDuration = 5000; // 30 seconds
-        const timeoutPromise = () => new Promise((_, reject) => {
-            setTimeout(() => {
-                reject(new Error('Navigation timed out!'));
-            }, timeoutDuration);
-        });
-
         try {
             let failCount = 0;
             while (targets.length > 0) {
@@ -141,7 +122,7 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
 
                 console.log("Target", target)
                 //@ts-ignore  ts doesnt know about mineflayer plugins
-                await Promise.race([moveToBlock(target), timeoutPromise()])
+                await moveToPositionWithRetry(this.bot, target.position)
                     .then(() => {
                         if (this.bot.canDigBlock(target)) {
                             this.bot.chat(`starting to dig ${target.name}`);
@@ -150,8 +131,15 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
                             throw new Error('Cannot dig target block');
                         }
                     })
-                    .then(() => {
+                    .then(async () => {
                         this.bot.chat(`finished digging ${target.name}`);
+                        const droppedItems = Object.values(this.bot.entities).filter(entity => entity.type === 'object' && entity.objectType === 'Item');
+                        for (let item of droppedItems) {
+                            if (item.position.distanceTo(this.bot.entity.position) < 2) {
+                                console.log(item)
+                                await moveToPositionWithRetry(this.bot, item.position)
+                            }
+                        }
                         targetCount -= 1;
                     })
                     .catch(async (err) => {

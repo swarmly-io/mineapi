@@ -5,9 +5,8 @@ import { Action, ActionAnalysisPredicate, ActionParams } from "./Action"
 import { ActionState } from "./BotActionState"
 import { ActionDoResult } from "./types"
 import { Block } from 'prismarine-block'
-import pathfinder from 'mineflayer-pathfinder'
 import { Observation } from "../types"
-const { GoalNear } = pathfinder.goals
+import { moveToPositionWithRetry, timeoutPromise } from "../helpers/TravelHelper"
 
 export type CraftActionParams = {
     itemIds: number | number[],
@@ -47,15 +46,18 @@ export class CraftAction extends Action<CraftActionParams> {
             console.log(`Going to craft ${count}`)
             if (!possibleCheck) {
                 if (craftingTable && craftingTablePos && !possibleCheck) {
-                    if (this.bot.entity.position.distanceTo(craftingTablePos) > 2) {
-                        this.bot.pathfinder.setGoal(new GoalNear(craftingTablePos?.x, craftingTablePos?.y, craftingTablePos?.z, 1))
-                    }
+                    await moveToPositionWithRetry(this.bot, craftingTablePos)
                 }
-                await this.bot.craft(recipe.mineflayerRecipe, Math.max(count, recipe.resultCount), craftingTable ?? undefined)
-                crafted += count * recipe.resultCount
-                console.log(`Crafted: ${recipe.resultCount}`)
-                if (crafted >= this.options.count!) {
-                    break
+                try {
+                    await Promise.race([timeoutPromise(10000), this.bot.craft(recipe.mineflayerRecipe, Math.max(count, recipe.resultCount), craftingTable ?? undefined)])
+                    crafted += count * recipe.resultCount
+                    this.bot.chat(`Crafted: ${this.mcData.items[recipe.mineflayerRecipe.result.id].displayName}`)
+                    if (crafted >= this.options.count!) {
+                        break
+                    }
+                } catch(e) {
+                    console.log("error in crafting",e)
+                    return { reason: 'Failed to craft recipe' }
                 }
                 inventory = observeInventory(this.bot)
                 if (crafted < this.options.count!) {

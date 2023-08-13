@@ -3,7 +3,7 @@ import { ActionDoResult } from "./types";
 import { ActionState } from "./BotActionState";
 import { findBlock } from "../helpers/EnvironmentHelper";
 import { observeInventory } from "../Observer";
-import { lookAtBlock, moveToPosition } from "../helpers/TravelHelper";
+import { lookAtBlock, moveToPositionWithRetry } from "../helpers/TravelHelper";
 import { sleep } from "../Attributes";
 
 export type DepositActionParams = {
@@ -34,7 +34,7 @@ export class DepositAction extends Action<DepositActionParams> {
         }
 
         try {
-            await moveToPosition(this.bot, chestPos)
+            await moveToPositionWithRetry(this.bot, chestPos)
             const chestBlock = this.bot.blockAt(chestPos)
             if (!chestBlock) {
                 return { reason: "Had trouble opening chest" }

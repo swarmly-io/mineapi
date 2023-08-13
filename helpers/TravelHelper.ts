@@ -1,5 +1,6 @@
 import { goals, Movements } from 'mineflayer-pathfinder';
 import { Entity } from 'prismarine-entity';
+import { Vec3 } from 'vec3';
 
 
 // place | person | entity | point | block
@@ -40,6 +41,26 @@ export function goTo(bot, position) {
     const defaultMove = new Movements(bot);
     bot.pathfinder.setMovements(defaultMove);
     bot.pathfinder.setGoal(new goals.GoalNear(position.x, position.y, position.z, 1));
+}
+
+export const timeoutPromise = (timeMs) => new Promise((_, reject) => {
+    setTimeout(() => {
+        reject(new Error('Navigation timed out!'));
+    }, timeMs);
+});
+
+
+export async function moveToPositionWithRetry(bot, position: Vec3, retries = 0) {
+    if (position.distanceTo(bot) < 1 || retries > 5) {
+        return Promise.resolve()
+    }
+    // limit a bot getting stuck to 30 seconds
+    try {
+        await Promise.race([moveToPosition(bot, position), timeoutPromise(30000)])
+    } catch(e) {
+        console.log("Retrying navigation")
+        return await moveToPositionWithRetry(bot, position, retries + 1)
+    }
 }
 
 export async function moveToPosition(bot, position) {
