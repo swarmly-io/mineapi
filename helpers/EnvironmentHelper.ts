@@ -21,14 +21,17 @@ export const findBlocks = function(bot: Bot, blockId: number | number[], maxDist
     let blockIds = typeof blockId == 'number' ? [blockId] : blockId
 
     let blocks: Vec3[] = []
-    if (observation) {
+    const simulatedWorld = observation && observation.world && Object.keys(observation.world).length > 0
+
+    if (simulatedWorld) {
         //@ts-ignore
         blocks = Object.entries(observation.world).filter(([_, blockId]) => blockIds.includes(blockId)).map(([pos, _]) => key2vec(pos))
     }
 
-    if (observation && !observation.position) {
+    if (simulatedWorld && !observation.position) {
         return []
     }
+    
     if (!bot.entity || !bot.entity.position) {
         return []
     }

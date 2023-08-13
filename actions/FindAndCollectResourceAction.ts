@@ -37,14 +37,6 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
     async do(possibleCheck: boolean = false, observation: Observation | undefined): Promise<ActionDoResult> { // TODO: Do we need metadata? 
         let blockTypes = typeof this.options.blockIds === 'number' ? [this.mcData.blocks[this.options.blockIds]] : this.options.blockIds.map(x => this.mcData.blocks[x])
         if (possibleCheck) {
-            const blocks = findBlocks(this.bot, this.options.blockIds, this.options.allowedMaxDistance, this.options.amountToCollect, observation)
-            if (!blocks) {
-                return { reason: "FindAndCollectResource: No blocks found" }
-            }
-
-            if (blocks.length < this.options.amountToCollect) {
-                return { reason: "FindAndCollectResource: Not enough blocks found" }
-            }
             // Now checking for harvest tools
             let mineableBlockTypes = blockTypes.filter(blockType => {
                 if (blockType.harvestTools !== undefined) {
@@ -59,8 +51,17 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
                 return true
             })
             if (mineableBlockTypes.length === 0) {
+                return { reason: "FindAndCollectResource: No tools available to mine that block" }
+            }
+            const blocks = findBlocks(this.bot, this.options.blockIds, this.options.allowedMaxDistance, this.options.amountToCollect, observation)
+            if (!blocks) {
                 return { reason: "FindAndCollectResource: No blocks found" }
             }
+
+            if (blocks.length < this.options.amountToCollect) {
+                return { reason: "FindAndCollectResource: Not enough blocks found" }
+            }
+
             return true;
         }
         const blocks = findBlocks(this.bot, this.options.blockIds, this.options.allowedMaxDistance, this.options.amountToCollect)

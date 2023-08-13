@@ -40,9 +40,8 @@ export class Attributes {
     // Returns true when all actions are possible, otherwise the index of the failing action
     async canDo(actions: Action<any>[]): Promise<true | FailedChainResult> { 
 
-        this.logger.debug(`Testing chain: [${actions.map(x => x.constructor.name)}]`)
+        this.logger.debug(`Testing chain: [${actions.map(x => x.constructor.name)}]`)   
         let observation = await observe(this.bot)
-
         for (let i = 0; i < actions.length; i++) {
             let action = actions[i]           
             this.logger.debug(`Testing action ${i} (${action.constructor.name})`, { params: action.options, observation: prettyObservation(observation, this.mcData) })
