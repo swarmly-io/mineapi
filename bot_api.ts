@@ -15,13 +15,14 @@ import { FailedChainResult } from "./types";
 import { Action } from "./actions/Action";
 import { BotActionState } from "./actions/BotActionState";
 import { SmeltAction, SmeltActionParams } from "./actions/SmeltAction";
+import { DepositAction, DepositActionParams } from "./actions/DepositAction";
 
 let mcData = mcd(MinecraftVersion)
 
-type ActionParams = CraftActionParams | FightActionParams | FindAndCollectParams | PlaceActionParams | SleepActionParams | TravelActionParams | SmeltActionParams
+type ActionParams = CraftActionParams | FightActionParams | FindAndCollectParams | PlaceActionParams | SleepActionParams | TravelActionParams | SmeltActionParams | DepositActionParams
 
 export interface CallbackInfo {
-    typeName: 'CraftAction' | 'FightAction' | 'FindAndCollectAction' | 'PlaceAction' | 'SleepAction' | 'TravelAction' | 'SmeltAction'
+    typeName: 'CraftAction' | 'FightAction' | 'FindAndCollectAction' | 'PlaceAction' | 'SleepAction' | 'TravelAction' | 'SmeltAction' | 'DepositAction'
     params: ActionParams
     continueOnFailure: boolean
     callback?: Action<any>
@@ -117,7 +118,7 @@ export class BotService {
         });
         this.attributes = new Attributes(this.bot, mcData, logger)
         this.id = uuidv4()
-        this.actions = [CraftAction, FightAction, FindAndCollectAction, PlaceAction, SleepAction, TravelAction, SmeltAction]
+        this.actions = [CraftAction, FightAction, FindAndCollectAction, PlaceAction, SleepAction, TravelAction, SmeltAction, DepositAction]
         this.actionsMap = Object.assign({}, ...this.actions.map(x=> ({ [x.name]: x })))
         this.taskRunner = new TaskRunner(this.attributes)
 
