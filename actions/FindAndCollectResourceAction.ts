@@ -7,7 +7,7 @@ import { ActionDoResult } from './types'
 import { ActionState } from './BotActionState'
 import { sleep } from '../Attributes'
 import { Observation } from '../types'
-import { moveToPositionWithRetry } from '../helpers/TravelHelper'
+import { moveToPositionWithRetry, nudge } from '../helpers/TravelHelper'
 import { Vec3 } from 'vec3'
 
 export type FindAndCollectParams = {
@@ -20,17 +20,6 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
 
     constructor(params: ActionParams<FindAndCollectParams>) {
         super(params)
-    }
-
-    private async nudge() {
-        const toVec = (x) => new Vec3(x.x, x.y, x.z)
-        const getRandomSurroundingCoord = () => (toVec({
-            x: Math.floor(Math.random() * 3) - 4 + this.bot.entity.position.x,
-            y: this.bot.entity.position.y,
-            z: Math.floor(Math.random() * 3) - 4 + this.bot.entity.position.z
-        }));
-        const coord = getRandomSurroundingCoord();
-        await moveToPositionWithRetry(this.bot, coord)
     }
 
     async do(possibleCheck: boolean = false, observation: Observation | undefined): Promise<ActionDoResult> { // TODO: Do we need metadata? 
@@ -66,7 +55,7 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
         const blocks = findBlocks(this.bot, this.options.blockIds, this.options.allowedMaxDistance, this.options.amountToCollect)
         this.bot.chat("Going to get some blocks: " + blocks.length)
 
-        await this.nudge()
+        await nudge(this.bot)
         let targetCount = this.options.amountToCollect;
 
         const getTargets = async () => {
@@ -99,12 +88,10 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
                 this.bot.chat(`already digging ${this.bot.targetDigBlock.name}`);
             } else {
                 if (this.bot.canDigBlock(targetBlock)) {
-                    this.bot.chat(`starting to dig ${targetBlock.name}`);
                     try {
                         await this.bot.tool.equipForBlock(targetBlock!, { getFromChest: true })
                         await sleep(50)
                         await this.bot.dig(targetBlock);
-                        this.bot.chat(`finished digging ${targetBlock.name}`);
                     } catch (err) {
                         console.log(err);
                     }
@@ -120,7 +107,6 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
                 const target = targets.pop();
                 if (!target) break;
 
-                console.log("Target", target)
                 //@ts-ignore  ts doesnt know about mineflayer plugins
                 await moveToPositionWithRetry(this.bot, target.position)
                     .then(() => {
@@ -133,13 +119,6 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
                     })
                     .then(async () => {
                         this.bot.chat(`finished digging ${target.name}`);
-                        const droppedItems = Object.values(this.bot.entities).filter(entity => entity.type === 'object' && entity.objectType === 'Item');
-                        for (let item of droppedItems) {
-                            if (item.position.distanceTo(this.bot.entity.position) < 2) {
-                                console.log(item)
-                                await moveToPositionWithRetry(this.bot, item.position)
-                            }
-                        }
                         targetCount -= 1;
                     })
                     .catch(async (err) => {
@@ -148,7 +127,7 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
                         } else {
                             this.bot.chat(err.message);
                         }
-                        await this.nudge()
+                        await nudge(this.bot, failCount)
                         if (failCount > 2) {
                             throw new Error("Failed to collect")
                         }
@@ -162,6 +141,13 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
             this.bot.chat("Darn!");
 
             return { reason: e } as ActionDoResult
+        }
+
+        const droppedItems = Object.values(this.bot.entities).filter(entity => entity.type === 'object' && entity.objectType === 'Item');
+        for (let item of droppedItems) {
+            if (this.bot.entity.position.distanceTo(item.position) < 5) {
+                await moveToPositionWithRetry(this.bot, item.position)
+            }
         }
         return true
     }

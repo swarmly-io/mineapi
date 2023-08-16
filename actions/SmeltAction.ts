@@ -74,35 +74,39 @@ export class SmeltAction extends Action<SmeltActionParams> {
             if (possibleCheck) {
                 continue
             }
-
             let openFurnace: Furnace | null = await this.getOpenFurnace(furnace, inputItem)
             if (!openFurnace) {
                 return { reason: "Had difficulty opening furnace" }
             }
-
-            let count = 0;
-            while (!completed && count < 30) {
-                await sleep(5000)
-                count += 1;
-                try {
-                    const item = await openFurnace!.takeOutput()
-                    if (item) {
-                        completed = true;
-                        this.bot.chat(`Completed smelting ${item.displayName}`)
-                        openFurnace.close()
-                        break;
-                    }
-                } catch (e) {
-                    console.log("Not ready yet", e)
-                }
-            }
+            const timeout = async () => { await sleep(30000); return false } 
+            completed = await Promise.race([this.smeltItem(openFurnace), timeout()])
         }
         if (possibleCheck) {
             return true
         }
-
         // @ts-ignore mutated in listener
         return completed
+    }
+
+    async smeltItem(openFurnace) {
+        let count = 0;
+        let completed = false;
+        while (!completed && count < 30) {
+            await sleep(1000)
+            count += 1;
+            try {
+                const item = await openFurnace!.takeOutput()
+                if (item) {
+                    completed = true;
+                    this.bot.chat(`Completed smelting ${item.displayName}`)
+                    openFurnace.close()
+                    return completed
+                }
+            } catch (e) {
+                console.log("Not ready yet", e)
+            }
+        }
+        return false
     }
 
     private async getOpenFurnace(furnace: Block, inputItem) {

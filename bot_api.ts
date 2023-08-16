@@ -16,13 +16,14 @@ import { Action } from "./actions/Action";
 import { BotActionState } from "./actions/BotActionState";
 import { SmeltAction, SmeltActionParams } from "./actions/SmeltAction";
 import { DepositAction, DepositActionParams } from "./actions/DepositAction";
+import { WithdrawActionParams } from "./actions/WithdrawAction";
 
 let mcData = mcd(MinecraftVersion)
 
-type ActionParams = CraftActionParams | FightActionParams | FindAndCollectParams | PlaceActionParams | SleepActionParams | TravelActionParams | SmeltActionParams | DepositActionParams
+type ActionParams = CraftActionParams | FightActionParams | FindAndCollectParams | PlaceActionParams | SleepActionParams | TravelActionParams | SmeltActionParams | DepositActionParams | WithdrawActionParams
 
 export interface CallbackInfo {
-    typeName: 'CraftAction' | 'FightAction' | 'FindAndCollectAction' | 'PlaceAction' | 'SleepAction' | 'TravelAction' | 'SmeltAction' | 'DepositAction'
+    typeName: 'CraftAction' | 'FightAction' | 'FindAndCollectAction' | 'PlaceAction' | 'SleepAction' | 'TravelAction' | 'SmeltAction' | 'DepositAction' | 'WithdrawAction'
     params: ActionParams
     continueOnFailure: boolean
     callback?: Action<any>
