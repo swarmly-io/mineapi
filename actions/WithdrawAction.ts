@@ -9,7 +9,7 @@ export type WithdrawActionParams = {
     items: { [item: number]: number }
 }
 
-export class DepositAction extends Action<WithdrawActionParams> {
+export class WithdrawAction extends Action<WithdrawActionParams> {
 
     constructor(params: ActionParams<WithdrawActionParams>) {
         super(params)
@@ -20,12 +20,13 @@ export class DepositAction extends Action<WithdrawActionParams> {
         if (!chestPos) {
             return { reason: "Couldn't find chest" }
         }
-        await moveToPositionWithRetry(this.bot, chestPos)
+        await moveToPositionWithRetry(this.bot, chestPos.offset(1,0,0))
         const chestBlock = this.bot.blockAt(chestPos)
         if (!chestBlock) {
             return { reason: "Had trouble opening chest" }
         }
         lookAtBlock(this.bot, chestBlock)
+        await sleep(100)
         const chest = await this.bot.openChest(chestBlock)
         await sleep(50)
 
@@ -45,11 +46,12 @@ export class DepositAction extends Action<WithdrawActionParams> {
                 await chest.withdraw(item * 1, null, quantity)
                 await sleep(10)
             }
-            chest.close()
             this.bot.chat("Finished getting items from chest")
         } catch(e) {
             console.log("Error in getting items from chest", e)
             return { reason: "Couldn't withdraw from chest" }
+        } finally {
+            chest.close()
         }
 
         return true

@@ -34,7 +34,7 @@ export class DepositAction extends Action<DepositActionParams> {
         }
 
         try {
-            await moveToPositionWithRetry(this.bot, chestPos)
+            await moveToPositionWithRetry(this.bot, chestPos.offset(1,0,0))
             const chestBlock = this.bot.blockAt(chestPos)
             if (!chestBlock) {
                 return { reason: "Had trouble opening chest" }

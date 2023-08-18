@@ -16,7 +16,7 @@ import { Action } from "./actions/Action";
 import { BotActionState } from "./actions/BotActionState";
 import { SmeltAction, SmeltActionParams } from "./actions/SmeltAction";
 import { DepositAction, DepositActionParams } from "./actions/DepositAction";
-import { WithdrawActionParams } from "./actions/WithdrawAction";
+import { WithdrawAction, WithdrawActionParams } from "./actions/WithdrawAction";
 
 let mcData = mcd(MinecraftVersion)
 
@@ -119,7 +119,7 @@ export class BotService {
         });
         this.attributes = new Attributes(this.bot, mcData, logger)
         this.id = uuidv4()
-        this.actions = [CraftAction, FightAction, FindAndCollectAction, PlaceAction, SleepAction, TravelAction, SmeltAction, DepositAction]
+        this.actions = [CraftAction, FightAction, FindAndCollectAction, PlaceAction, SleepAction, TravelAction, SmeltAction, DepositAction, WithdrawAction]
         this.actionsMap = Object.assign({}, ...this.actions.map(x=> ({ [x.name]: x })))
         this.taskRunner = new TaskRunner(this.attributes)
 

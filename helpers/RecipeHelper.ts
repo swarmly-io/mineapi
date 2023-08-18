@@ -67,8 +67,6 @@ export const craftableAmount = (recipe: IngredientRecipe, inventory: InventoryOb
         const availableItemCount = inventory.items[itemId] || 0;
         const craftableCount = Math.floor(availableItemCount / itemCount);
         if (craftableCount == 0) {
-            console.log(recipe.ingredients)
-            console.log(`Missing ${itemId} needs: ${itemCount} have: ${availableItemCount}`)
         } else {
             console.log(`Able to craft with ${itemId}`)
         }
