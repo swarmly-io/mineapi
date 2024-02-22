@@ -1,10 +1,8 @@
 # MC Bot
+This project allows you to run a swarm of bots from through rest API!
 
 ## Running
-```npm install -g ts-node```
-
-### For console example app
-```ts-node index.ts host port botname```
-### For web app
-
-```npm start```
+* ```npm install -g ts-node```
+* Start minecraft and run ```/publish 1337```
+* Now start the API ```tsc app.ts```
+* Use the postman collection to initialise a bot

@@ -12,7 +12,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"init\": {\r\n        \"port\": 51866,\r\n        \"host\": \"localhost\",\r\n        \"name\": \"apiBot3\"\r\n    },\r\n    \"type\": \"travel\",\r\n    \"travelType\": \"point\"\r\n}",
+					"raw": "{\r\n    \"init\": {\r\n        \"port\": 1337,\r\n        \"host\": \"localhost\",\r\n        \"name\": \"apiBot\"\r\n    },\r\n    \"type\": \"travel\",\r\n    \"travelType\": \"point\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -39,7 +39,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:3000/players/apiBot3",
+					"raw": "http://localhost:3000/players/apiBot",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -47,7 +47,7 @@
 					"port": "3000",
 					"path": [
 						"players",
-						"apiBot3"
+						"apiBot"
 					]
 				}
 			},
@@ -87,7 +87,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:3000/state/apiBot3",
+					"raw": "http://localhost:3000/state/apiBot",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -95,7 +95,7 @@
 					"port": "3000",
 					"path": [
 						"state",
-						"apiBot3"
+						"apiBot"
 					]
 				}
 			},
@@ -242,7 +242,7 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:3000/canDo/apiBot3",
+					"raw": "http://localhost:3000/canDo/apiBot",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -250,7 +250,7 @@
 					"port": "3000",
 					"path": [
 						"canDo",
-						"apiBot3"
+						"apiBot"
 					]
 				}
 			},
@@ -263,7 +263,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"port\": 62660,\r\n    \"host\": \"localhost\",\r\n    \"name\": \"apiBot3\"\r\n}",
+					"raw": "{\r\n    \"port\": 62660,\r\n    \"host\": \"localhost\",\r\n    \"name\": \"apiBot\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
