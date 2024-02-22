@@ -7,3 +7,6 @@ This project allows you to run a swarm of bots from through REST API! This is ca
 * Now start the API ```ts-node app.ts```
 * Use the postman collection to initialise a bot, now you can run commands like fight an entity or collect resources.
 
+## Example
+![Bot example](https://giphy.com/gifs/minecraft-bot-swarmly-aaqEg3r8va8wCGZORL)
+
