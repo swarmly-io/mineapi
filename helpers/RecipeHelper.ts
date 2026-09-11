@@ -1,10 +1,10 @@
 import { IndexedData, Recipe, RecipeItem, ShapedRecipe, ShapelessRecipe} from 'minecraft-data'
 import { InventoryObservation } from '../types'
-import prl, { RecipeClasses, Recipe as PrismarineRecipe } from 'prismarine-recipe'
+import prl, { Recipe as PrismarineRecipe } from 'prismarine-recipe'
 import { MinecraftVersion } from '../Config'
 
 //@ts-ignore
-const PRecipe: RecipeClasses = prl(MinecraftVersion)
+const PRecipe: ReturnType<typeof prl> = prl(MinecraftVersion)
 
 export type IngredientRecipe = {
     requiresTable: boolean,

@@ -58,12 +58,15 @@ export const nudge = async (bot, magnitude = 1) => {
     const coord = getRandomSurroundingCoord();
     bot.chat("Nudging")
     bot.setControlState('back', true)
-
-    await moveToPosition(bot, coord)
+    try {
+        await moveToPosition(bot, coord)
+    } finally {
+        bot.setControlState('back', false)
+    }
 }
 
 export async function moveToPositionWithRetry(bot, position: Vec3, retries = 0) {
-    if (position.distanceTo(bot) < 1 || retries > 5) {
+    if (position.distanceTo(bot.entity.position) < 1 || retries > 5) {
         return Promise.resolve()
     }
     const getTimeToTimeout = (bot, pos) => (pos.distanceTo(bot.entity.position)) /* blocks a second */ * 1000

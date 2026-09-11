@@ -88,7 +88,7 @@ export class Example {
 
        const resources = searchMcData(this.mcData, params).map(x=> x.id)
        const actionParams = { blockIds: resources, amountToCollect: 1, allowedMaxDistance: 50 } as FindAndCollectParams
-       const callbackChain = [{ typeName: 'FindAndCollectResourceAction', params: actionParams } as CallbackInfo]
+       const callbackChain = [{ typeName: 'FindAndCollectAction', params: actionParams, continueOnFailure: false } as CallbackInfo]
        const possible = await this.jim.start_task(callbackChain, true)
        if (possible) {
             this.jim.bot.chat("Collecting " + this.resourceType)

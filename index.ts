@@ -8,7 +8,6 @@ import { MinecraftVersion } from './Config'
 import fs from 'fs'
 import { FightActionParams } from './actions/FightAction'
 import { Schematic } from 'prismarine-schematic'
-import { Vec3 } from 'vec3'
 import { logger } from './log'
 
 let mcData = mcd(MinecraftVersion)
@@ -102,7 +101,6 @@ async function read() {
 
         if (cmd === "build") {
             let schematic = await Schematic.read(fs.readFileSync('small_house.schem'), MinecraftVersion)
-            schematic.offset = new Vec3(0, 0, 0)
             attributes.tryDo([attributes.build_schematic({
                 schematic: schematic,
                 position: bot.entity.position.floored()

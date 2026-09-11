@@ -48,20 +48,26 @@ app.get('/status/:name', (req, res) => {
 app.post('/canDo/:name', async (req, res) => {
     const bot = getBot(req.params.name);
     console.log(req.body)
-    res.send(await bot.start_task(req.body, true))
+    res.send(await bot.can_do(req.body))
 })
 
 app.post('/tryDo/:name', async (req, res) => {
     const bot = getBot(req.params.name);
     console.log(req.body)
-    const result = await bot.start_task(req.body)
-    res.send({"message": "task started", "result": result })
+    const task = await bot.start_task(req.body)
+    res.status(202).send({ message: "task accepted", taskId: task.id, task })
 })
 
-app.get('/stop/:name', async (req, res) => {
+app.get('/task/:name/:taskId', (req, res) => {
+    const task = getBot(req.params.name).get_task(req.params.taskId)
+    if (!task) return res.status(404).send({ message: "No task found" })
+    res.send(task)
+})
+
+app.post('/stop/:name/:taskId?', async (req, res) => {
     const bot = getBot(req.params.name);
-    await bot.stop()
-    res.send({"message": "bot stopped" })
+    await bot.stop(req.params.taskId)
+    res.send({"message": "task cancelled", taskId: req.params.taskId })
 })
 
 app.post('/all/tryDo', (req, res) => {
@@ -119,5 +125,4 @@ function getBot(name: string) {
     }
     return bot;
 }
-
 

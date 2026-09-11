@@ -32,7 +32,7 @@ export class BotActionState extends EventEmitter {
   private prevFood: number = 20; // Maximum food value
   private currentTask: Action<any> | undefined;
   stateRecordHistory: ActionState[] = [];
-  stateRecordingInterval: NodeJS.Timer | undefined;
+  stateRecordingInterval: NodeJS.Timeout | undefined;
 
   constructor(bot: Bot) {
     super();
@@ -181,6 +181,8 @@ export class BotActionState extends EventEmitter {
       clearInterval(this.stateRecordingInterval);
       this.stateRecordingInterval = undefined;
     }
+    this.currentTask = undefined;
+    this.stateRecordHistory = [];
   }
 
   private analyzeOverTime(
@@ -225,5 +227,3 @@ export class BotActionState extends EventEmitter {
     return this.analyse();
   }
 }
-
-
