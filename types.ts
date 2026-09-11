@@ -10,6 +10,10 @@ export type InventoryObservation = {
 }
 
 export interface Observation {
+    observation_id?: string,
+    version?: number,
+    timestamp?: string,
+    bot_id?: string,
     position: Vec3,
     status: {
         health: number,

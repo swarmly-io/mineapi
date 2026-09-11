@@ -17,6 +17,7 @@ export type FindAndCollectParams = {
 }
 
 export class FindAndCollectAction extends Action<FindAndCollectParams> {
+    lastOutcome: { targetedPositions: { x: number, y: number, z: number }[], minedPositions: { x: number, y: number, z: number }[] } = { targetedPositions: [], minedPositions: [] }
 
     constructor(params: ActionParams<FindAndCollectParams>) {
         super(params)
@@ -53,6 +54,7 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
             return true;
         }
         const blocks = findBlocks(this.bot, this.options.blockIds, this.options.allowedMaxDistance, this.options.amountToCollect)
+        this.lastOutcome.targetedPositions = blocks.map(block => ({ x: block.x, y: block.y, z: block.z }))
         this.bot.chat("Going to get some blocks: " + blocks.length)
 
         await nudge(this.bot)
@@ -120,6 +122,7 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
                     .then(async () => {
                         this.bot.chat(`finished digging ${target.name}`);
                         targetCount -= 1;
+                        this.lastOutcome.minedPositions.push({ x: target.position.x, y: target.position.y, z: target.position.z })
                     })
                     .catch(async (err) => {
                         if (err.message === 'Navigation timed out!') {
@@ -140,7 +143,7 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
             console.log("Error in collect", e)
             this.bot.chat("Darn!");
 
-            return { reason: e } as ActionDoResult
+            return { reason: String(e), details: this.lastOutcome } as ActionDoResult
         }
 
         const droppedItems = Object.values(this.bot.entities).filter(entity => entity.type === 'object' && entity.objectType === 'Item');
@@ -149,7 +152,7 @@ export class FindAndCollectAction extends Action<FindAndCollectParams> {
                 await moveToPositionWithRetry(this.bot, item.position)
             }
         }
-        return true
+        return targetCount === 0 ? true : { reason: "FindAndCollectResource: Interrupted collection", details: this.lastOutcome }
     }
 
     analyseFn(): ActionAnalysisPredicate {

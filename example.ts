@@ -50,9 +50,9 @@ export class Example {
     async fightBot() {
         const fightParams = { entityName: 'steve', entityType: 'player' } as FightActionParams
         const callbackChain = [{ typeName: 'FightAction', params: fightParams } as CallbackInfo]
-        const possible = await this.jim.start_task(callbackChain, true)
+        const possible = await this.jim.can_do(callbackChain)
         console.log("Fighting possible", possible)
-        if (possible) {
+        if (possible === true) {
             this.jim.bot.chat("Fighting steve!")
             await this.jim.start_task(callbackChain)
         } else {
@@ -67,8 +67,8 @@ export class Example {
            const goal = createGoal({ type: 'point', value: { ...entity.position } as Point } as TravelGoal)
            const travelParams = { goal } as TravelActionParams
            const callbackChain = [{ typeName: 'TravelAction', params: travelParams } as CallbackInfo]
-           const possible = await this.jim.start_task(callbackChain, true)
-           if (possible) {
+           const possible = await this.jim.can_do(callbackChain)
+           if (possible === true) {
             this.jim.bot.chat("Travelling")
             this.jim.start_task(callbackChain)
            } else {
@@ -89,10 +89,10 @@ export class Example {
        const resources = searchMcData(this.mcData, params).map(x=> x.id)
        const actionParams = { blockIds: resources, amountToCollect: 1, allowedMaxDistance: 50 } as FindAndCollectParams
        const callbackChain = [{ typeName: 'FindAndCollectAction', params: actionParams, continueOnFailure: false } as CallbackInfo]
-       const possible = await this.jim.start_task(callbackChain, true)
-       if (possible) {
+       const possible = await this.jim.can_do(callbackChain)
+       if (possible === true) {
             this.jim.bot.chat("Collecting " + this.resourceType)
-            this.jim.start_task(callbackChain, true)
+            this.jim.start_task(callbackChain)
             
        } else {
             this.jim.bot.chat("Couldn't collect " + this.resourceType)
